@@ -3,491 +3,1489 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WeAreCars - Car Rental Management Solution</title>
+  <title>WeAreCars - Elite Car Rental Management Experience</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy-900: #0F172A;
-      --navy-800: #1E293B;
-      --navy-700: #334155;
-      --slate-500: #64748B;
-      --slate-300: #CBD5E1;
-      --slate-200: #E2E8F0;
-      --slate-100: #F1F5F9;
-      --slate-50:  #F8FAFC;
-      --teal-600:  #0D9488;
-      --teal-500:  #14B8A6;
-      --teal-400:  #2DD4BF;
-      --teal-100:  #CCFBF1;
-      --teal-50:   #F0FDFA;
-      --danger-600:#DC2626;
-      --danger-100:#FEE2E2;
-      --success-600:#16A34A;
-      --success-100:#DCFCE7;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
-      --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+      --bg-darkest: #070B12;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --bg-card-hover: rgba(22, 34, 62, 0.85);
+      --bg-glass: rgba(255, 255, 255, 0.035);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(13, 148, 136, 0.4);
+      --border-glow: rgba(45, 212, 191, 0.6);
+      
+      --teal-primary: #0D9488;
+      --teal-glow: #14B8A6;
+      --teal-bright: #2DD4BF;
+      --teal-neon: #00F5D4;
+      --cyan-electric: #00BBF9;
+      --amber-gold: #F59E0B;
+      --coral-red: #F43F5E;
+      --purple-accent: #8B5CF6;
+
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dark: #64748B;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      
+      --shadow-ambient: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --shadow-glow: 0 0 25px rgba(13, 148, 136, 0.25);
+      --shadow-neon: 0 0 35px rgba(0, 245, 212, 0.35);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--slate-50); color: var(--navy-900); min-height: 100vh; display: flex; flex-direction: column; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg-darkest);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(13, 148, 136, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(0, 187, 249, 0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #070B12 0%, #0A101D 100%);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
 
-    /* Top Navigation */
+    /* Ambient dynamic glow particle background */
+    .bg-mesh {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+      background-size: 50px 50px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    }
+
+    /* Navigation Header */
     header {
-      background: var(--navy-900);
-      color: white;
-      padding: 0 2rem;
-      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(7, 11, 18, 0.82);
+      border-bottom: 1px solid var(--border-subtle);
+      height: 72px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      padding: 0 2.5rem;
+      transition: all 0.3s ease;
     }
-    .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: white; }
-    .brand-logo {
-      width: 36px; height: 36px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
-      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; color: white;
+    
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: white;
+      cursor: pointer;
     }
-    .brand-title { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; }
-    .brand-title span { color: var(--teal-400); }
-    .nav-links { display: flex; align-items: center; gap: 0.5rem; list-style: none; }
-    .nav-btn {
-      background: transparent; border: none; color: #94A3B8; padding: 0.5rem 0.85rem; border-radius: var(--radius-sm);
-      font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 0.4rem;
+    
+    .brand-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #0D9488, #00F5D4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: #070B12;
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.45);
+      position: relative;
+      overflow: hidden;
     }
-    .nav-btn:hover { color: white; background: rgba(255, 255, 255, 0.06); }
-    .nav-btn.active { color: white; background: rgba(255, 255, 255, 0.12); }
-    .user-pill {
-      background: rgba(255, 255, 255, 0.08); padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
-      display: flex; align-items: center; gap: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .brand-icon-box::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+      animation: iconShine 4s infinite linear;
     }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-400); box-shadow: 0 0 8px var(--teal-400); }
+    
+    @keyframes iconShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    
+    .brand-title span {
+      background: linear-gradient(135deg, #2DD4BF, #00F5D4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      list-style: none;
+    }
+
+    .nav-link {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.active {
+      color: white;
+      background: linear-gradient(135deg, rgba(13, 148, 136, 0.25), rgba(0, 245, 212, 0.15));
+      border-color: var(--border-highlight);
+      box-shadow: 0 0 15px rgba(13, 148, 136, 0.2);
+    }
+
+    .staff-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(13, 148, 136, 0.12);
+      border: 1px solid rgba(13, 148, 136, 0.3);
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.825rem;
+      font-weight: 700;
+      color: var(--teal-bright);
+    }
+
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--teal-neon);
+      box-shadow: 0 0 10px var(--teal-neon);
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
 
     /* Main Container */
-    main { flex: 1; padding: 2rem; max-width: 1360px; width: 100%; margin: 0 auto; }
-
-    /* Cards & Panels */
-    .card {
-      background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.75rem;
-      box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease;
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2.25rem 2rem;
+      position: relative;
+      z-index: 10;
     }
-    .card-header { margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; }
-    .card-title { font-size: 1.25rem; font-weight: 700; color: var(--navy-900); }
-    .card-subtitle { font-size: 0.875rem; color: var(--slate-500); margin-top: 0.2rem; }
 
-    /* Buttons */
-    .btn {
-      padding: 0.65rem 1.25rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; cursor: pointer;
-      border: 1px solid transparent; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    /* ANIMATED CAR HIGHWAY HERO SECTION */
+    .hero-highway-card {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 16, 29, 0.95) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem;
+      margin-bottom: 2.25rem;
+      box-shadow: var(--shadow-ambient);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(24px);
     }
-    .btn-primary { background: var(--teal-600); color: white; }
-    .btn-primary:hover { background: var(--teal-500); box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3); }
-    .btn-secondary { background: white; border-color: var(--slate-300); color: var(--navy-800); }
-    .btn-secondary:hover { background: var(--slate-50); border-color: var(--slate-400); }
-    .btn-outline { background: transparent; border-color: var(--teal-600); color: var(--teal-600); }
-    .btn-outline:hover { background: var(--teal-50); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Inputs & Forms */
-    .form-group { margin-bottom: 1.2rem; }
-    .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy-800); margin-bottom: 0.4rem; }
-    .form-control {
-      width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--slate-300); border-radius: var(--radius-sm);
-      font-size: 0.925rem; color: var(--navy-900); transition: border-color 0.15s ease, box-shadow 0.15s ease; outline: none; background: white;
+    .hero-highway-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.6), transparent);
     }
-    .form-control:focus { border-color: var(--teal-600); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15); }
-    .form-control.is-invalid { border-color: var(--danger-600); background-color: #FFF5F5; }
-    .error-feedback { color: var(--danger-600); font-size: 0.775rem; font-weight: 600; margin-top: 0.35rem; display: none; }
-    .is-invalid + .error-feedback, .show-error { display: block; }
-    .input-hint { font-size: 0.775rem; color: var(--slate-500); margin-top: 0.3rem; }
 
-    /* Grid Layouts */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
-    .booking-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 1.5rem; }
+    .hero-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
 
-    /* KPI Cards */
-    .kpi-card { background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: var(--shadow-sm); }
-    .kpi-header { display: flex; justify-content: space-between; align-items: center; color: var(--slate-500); font-size: 0.85rem; font-weight: 600; }
-    .kpi-val { font-size: 2.25rem; font-weight: 800; color: var(--navy-900); margin: 0.5rem 0; font-family: 'JetBrains Mono', monospace; }
-    .kpi-desc { font-size: 0.775rem; color: var(--slate-500); }
+    .hero-title-group h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #FFFFFF 60%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-title-group p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.35rem;
+    }
+
+    .highway-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .speed-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .speed-btn:hover, .speed-btn.active {
+      background: var(--teal-primary);
+      color: white;
+      border-color: var(--teal-bright);
+      box-shadow: 0 0 12px rgba(13, 148, 136, 0.4);
+    }
+
+    /* The Highway Animation Stage */
+    .highway-stage {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      border-radius: var(--radius-lg);
+      background: radial-gradient(ellipse at 50% 20%, #152238 0%, #080D18 80%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    /* City Skyline & Stars in background */
+    .highway-skyline {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 60px;
+      background: 
+        radial-gradient(1.5px 1.5px at 10% 20%, #fff 100%, transparent),
+        radial-gradient(1.5px 1.5px at 30% 15%, #fff 100%, transparent),
+        radial-gradient(1.5px 1.5px at 60% 25%, #fff 100%, transparent),
+        radial-gradient(1.5px 1.5px at 85% 10%, #fff 100%, transparent),
+        radial-gradient(2px 2px at 95% 30%, #2DD4BF 100%, transparent);
+      opacity: 0.6;
+    }
+
+    /* Asphalt Road Surface with moving dashed lines */
+    .highway-road {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 75px;
+      background: linear-gradient(180deg, #111827 0%, #090E17 100%);
+      border-top: 2px solid #2DD4BF44;
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.6);
+    }
+
+    .road-lanes {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 200%;
+      height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        #2DD4BF 0px,
+        #2DD4BF 40px,
+        transparent 40px,
+        transparent 80px
+      );
+      box-shadow: 0 0 10px #2DD4BF;
+      animation: roadMove 1s linear infinite;
+    }
+
+    @keyframes roadMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-80px); }
+    }
+
+    /* Street light poles passing by */
+    .street-poles {
+      position: absolute;
+      top: 0; left: 0; width: 200%; height: 100%;
+      pointer-events: none;
+      animation: roadMove 1.5s linear infinite;
+      opacity: 0.25;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.4) 0px,
+        rgba(255, 255, 255, 0.4) 2px,
+        transparent 2px,
+        transparent 350px
+      );
+    }
+
+    /* The Animated Cruising Vehicle */
+    .vehicle-cruiser {
+      position: absolute;
+      bottom: 22px;
+      left: 38%;
+      transform: translateX(-50%);
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Chassis Bounce / Suspension Animation */
+    .car-chassis-wrap {
+      animation: carSuspension 0.4s ease-in-out infinite alternate;
+      position: relative;
+    }
+
+    @keyframes carSuspension {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-2.5px); }
+    }
+
+    /* Headlight illumination beam on the road */
+    .headlight-beam {
+      position: absolute;
+      right: -240px;
+      bottom: 2px;
+      width: 250px;
+      height: 70px;
+      background: radial-gradient(ellipse at 0% 50%, rgba(0, 245, 212, 0.4) 0%, rgba(0, 245, 212, 0.15) 45%, transparent 75%);
+      transform-origin: left center;
+      transform: perspective(300px) rotateY(-20deg);
+      pointer-events: none;
+      animation: beamFlicker 3s infinite alternate;
+    }
+
+    @keyframes beamFlicker {
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 0.75; }
+    }
+
+    /* Taillight glow trail */
+    .taillight-trail {
+      position: absolute;
+      left: -90px;
+      bottom: 12px;
+      width: 90px;
+      height: 6px;
+      background: linear-gradient(90deg, transparent, rgba(244, 63, 94, 0.7));
+      border-radius: 999px;
+      filter: blur(1.5px);
+    }
+
+    /* SVG Animated Wheels */
+    .animated-wheel {
+      animation: wheelSpin 0.35s linear infinite;
+      transform-origin: center center;
+    }
+
+    @keyframes wheelSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 4 Live KPI Cards Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2.25rem;
+    }
+
+    .kpi-glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-ambient);
+      backdrop-filter: blur(16px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .kpi-glass-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-highlight);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    }
+
+    .kpi-glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 3px;
+      background: var(--card-accent, var(--teal-primary));
+    }
+
+    .kpi-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.825rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .kpi-icon-pill {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .kpi-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: white;
+      margin: 0.75rem 0 0.25rem;
+      line-height: 1;
+    }
+
+    .kpi-subtext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Content Layout Grids */
+    .grid-duo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.75rem;
+    }
+
+    .booking-split-view {
+      display: grid;
+      grid-template-columns: 1.8fr 1.2fr;
+      gap: 2rem;
+    }
+
+    /* Universal Glass Card Panels */
+    .glass-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.85rem;
+      box-shadow: var(--shadow-ambient);
+      backdrop-filter: blur(16px);
+      position: relative;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Interactive Visual Vehicle Model Cards (New Booking) */
+    .vehicle-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .vehicle-model-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .vehicle-model-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(45, 212, 191, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .vehicle-model-card.selected {
+      background: linear-gradient(135deg, rgba(13, 148, 136, 0.2), rgba(0, 245, 212, 0.08));
+      border-color: var(--teal-bright);
+      box-shadow: 0 0 20px rgba(13, 148, 136, 0.3);
+    }
+
+    .vehicle-model-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 22px; height: 22px;
+      background: var(--teal-bright);
+      color: #070B12;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.75rem;
+    }
+
+    .v-thumb {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.85rem;
+    }
+
+    .v-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+    }
+
+    .v-surcharge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--teal-bright);
+      margin-top: 0.25rem;
+    }
+
+    .v-spec-tags {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.65rem;
+    }
+
+    .spec-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Fuel Type Selector Chips */
+    .fuel-chips-wrap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .fuel-chip {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .fuel-chip:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .fuel-chip.selected {
+      border-color: var(--teal-bright);
+      background: rgba(13, 148, 136, 0.2);
+      box-shadow: 0 0 15px rgba(13, 148, 136, 0.25);
+    }
+
+    .fuel-chip-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: white;
+    }
+
+    .fuel-chip-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--teal-bright);
+      margin-top: 0.2rem;
+    }
+
+    /* Form Fields & Inputs */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.45rem;
+    }
+
+    .glow-input {
+      width: 100%;
+      background: rgba(10, 16, 29, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      color: white;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .glow-input:focus {
+      border-color: var(--teal-bright);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2), 0 0 15px rgba(13, 148, 136, 0.3);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .glow-input.is-invalid {
+      border-color: var(--coral-red);
+      background: rgba(244, 63, 94, 0.06);
+      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
+    }
+
+    .error-msg {
+      color: var(--coral-red);
+      font-size: 0.775rem;
+      font-weight: 600;
+      margin-top: 0.35rem;
+      display: none;
+    }
+
+    .is-invalid + .error-msg, .show-error {
+      display: block;
+    }
 
     /* Live Quotation Sidebar */
-    .quote-card { background: linear-gradient(180deg, #FFFFFF, var(--slate-50)); border: 2px solid var(--teal-600); }
-    .quote-row { display: flex; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px dashed var(--slate-200); font-size: 0.9rem; }
-    .quote-row.total { border-bottom: none; border-top: 2px solid var(--navy-900); padding-top: 0.85rem; margin-top: 0.5rem; font-size: 1.25rem; font-weight: 800; color: var(--navy-900); }
-    .quote-total-amount { color: var(--teal-600); font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; }
+    .live-quote-box {
+      background: linear-gradient(180deg, rgba(20, 32, 56, 0.85) 0%, rgba(12, 19, 34, 0.95) 100%);
+      border: 2px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 1.85rem;
+      box-shadow: var(--shadow-neon);
+      position: sticky;
+      top: 96px;
+      backdrop-filter: blur(20px);
+    }
 
-    /* Badges */
-    .badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
-    .badge-teal { background: var(--teal-100); color: var(--teal-600); }
-    .badge-green { background: var(--success-100); color: var(--success-600); }
-    .badge-danger { background: var(--danger-100); color: var(--danger-600); }
+    .quote-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .neon-pill {
+      background: rgba(0, 245, 212, 0.15);
+      border: 1px solid rgba(0, 245, 212, 0.35);
+      color: var(--teal-neon);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(0, 245, 212, 0.2);
+    }
+
+    .car-allocated-card {
+      background: rgba(13, 148, 136, 0.1);
+      border: 1px solid rgba(45, 212, 191, 0.25);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .car-allocated-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 245, 212, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .quote-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.65rem 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .quote-line strong {
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .quote-total-card {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 2px solid rgba(45, 212, 191, 0.4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .total-price-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: var(--teal-neon);
+      text-shadow: 0 0 20px rgba(0, 245, 212, 0.4);
+    }
+
+    /* Buttons */
+    .btn-action {
+      background: linear-gradient(135deg, #0D9488 0%, #00F5D4 100%);
+      color: #070B12;
+      border: none;
+      padding: 0.85rem 1.75rem;
+      border-radius: var(--radius-sm);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(0, 245, 212, 0.35);
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 245, 212, 0.55);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
 
     /* Tables */
-    .table-container { overflow-x: auto; border: 1px solid var(--slate-200); border-radius: var(--radius-md); background: white; }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; }
-    th { background: var(--slate-100); color: var(--navy-700); font-weight: 700; padding: 0.85rem 1rem; border-bottom: 1px solid var(--slate-200); }
-    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--slate-200); color: var(--navy-800); }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--slate-50); }
+    .table-responsive {
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: rgba(10, 16, 29, 0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.925rem;
+      color: white;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Badges */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge-avail {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34D399;
+    }
+
+    .badge-rented {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #FB7185;
+    }
 
     /* Modals */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center; z-index: 100; padding: 1.5rem;
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 13, 0.82);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1.5rem;
     }
-    .modal-overlay.active { display: flex; }
-    .modal-box {
-      background: white; border-radius: var(--radius-lg); width: 100%; max-width: 580px; box-shadow: var(--shadow-xl);
-      overflow: hidden; animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes popIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .modal-header { background: var(--navy-900); color: white; padding: 1.25rem 1.75rem; display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 1.75rem; max-height: 75vh; overflow-y: auto; }
-    .modal-footer { padding: 1.25rem 1.75rem; background: var(--slate-50); border-top: 1px solid var(--slate-200); display: flex; justify-content: flex-end; gap: 0.75rem; }
 
-    /* Hidden Utility */
-    .screen { display: none; }
-    .screen.active { display: block; }
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background: #0E1626;
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 620px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), var(--shadow-glow);
+      overflow: hidden;
+      animation: modalSpring 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSpring {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-sheet-header {
+      background: linear-gradient(90deg, #131E33 0%, #0E1626 100%);
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-sheet-body {
+      padding: 2rem;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    .modal-sheet-footer {
+      padding: 1.25rem 2rem;
+      background: rgba(10, 16, 29, 0.7);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    /* Screen Visibility */
+    .view-screen { display: none; }
+    .view-screen.active { display: block; }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Header -->
+  <!-- Atmospheric Background Mesh -->
+  <div class="bg-mesh"></div>
+
+  <!-- Top Glass Navigation -->
   <header>
-    <a href="#" class="brand" onclick="navigate('dashboard')">
-      <div class="brand-logo">W</div>
+    <div class="brand-wrap" onclick="showScreen('dashboard')">
+      <div class="brand-icon-box">W</div>
       <div class="brand-title">WeAre<span>Cars</span></div>
-    </a>
-    <ul class="nav-links" id="navLinks">
-      <li><button class="nav-btn active" id="btnNavDash" onclick="navigate('dashboard')">📊 Dashboard</button></li>
-      <li><button class="nav-btn" id="btnNavNew" onclick="navigate('new-booking')">➕ New Booking</button></li>
-      <li><button class="nav-btn" id="btnNavRented" onclick="navigate('rented-cars')">🚗 Rented Cars</button></li>
-      <li><button class="nav-btn" id="btnNavHistory" onclick="navigate('booking-history')">📜 Booking History</button></li>
+    </div>
+
+    <ul class="nav-menu" id="navLinksBar">
+      <li><button class="nav-link active" id="navBtnDash" onclick="showScreen('dashboard')">📊 Dashboard</button></li>
+      <li><button class="nav-link" id="navBtnNew" onclick="showScreen('new-booking')">➕ New Booking</button></li>
+      <li><button class="nav-link" id="navBtnRented" onclick="showScreen('rented-cars')">🚗 Rented Cars</button></li>
+      <li><button class="nav-link" id="navBtnHistory" onclick="showScreen('booking-history')">📜 Booking History</button></li>
       <li>
-        <div class="user-pill">
-          <span class="status-dot"></span>
-          <span id="userStatusText">sta001</span>
+        <div class="staff-badge">
+          <span class="live-dot"></span>
+          <span>STAFF: <strong id="staffUserDisplay">sta001</strong></span>
         </div>
       </li>
-      <li><button class="nav-btn" onclick="logout()" style="color: #FDA4AF;">Logout</button></li>
+      <li><button class="nav-link" onclick="logoutStaff()" style="color: #FDA4AF;">Logout</button></li>
     </ul>
   </header>
 
-  <!-- Main View Screens -->
+  <!-- Main View Container -->
   <main>
 
-    <!-- SCREEN 1: WELCOME SCREEN (When logged out) -->
-    <div id="screen-welcome" class="screen">
-      <div style="max-width: 680px; margin: 4rem auto; text-align: center;">
-        <div class="card" style="padding: 3.5rem 2.5rem; border-top: 4px solid var(--teal-600);">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🚗</div>
-          <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--navy-900); letter-spacing: -0.03em;">WeAreCars Rental Management</h1>
-          <p style="color: var(--teal-600); font-weight: 600; margin: 0.5rem 0 1.25rem;">Sunderland Branch • Fleet Operations & Bookings Desk</p>
-          <p style="color: var(--slate-500); font-size: 0.95rem; line-height: 1.6; max-width: 500px; margin: 0 auto 2rem;">
-            Authorized staff application for managing customer reservations, computing live itemized quotes, inspecting available fleet, and processing bookings.
+    <!-- ========================================== -->
+    <!-- VIEW 1: WELCOME SCREEN (When logged out)   -->
+    <!-- ========================================== -->
+    <div id="view-welcome" class="view-screen">
+      <div style="max-width: 720px; margin: 4rem auto; text-align: center;">
+        <div class="glass-panel" style="padding: 4rem 3rem; border-top: 4px solid var(--teal-bright);">
+          <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem; border-radius: var(--radius-lg); background: linear-gradient(135deg, #0D9488, #00F5D4); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 0 30px rgba(0, 245, 212, 0.5);">🏎️</div>
+          <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.5rem;">WeAreCars Management</h1>
+          <p style="color: var(--teal-bright); font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem;">Sunderland Branch • Operations & Fleet Desk</p>
+          <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.7; max-width: 540px; margin: 0 auto 2.5rem;">
+            Welcome to the internal WeAreCars desktop management terminal. Authorized desk staff can calculate real-time itemized bills, verify driving licenses, inspect the fleet, and register bookings.
           </p>
-          <button class="btn btn-primary" onclick="openLoginModal()" style="font-size: 1.05rem; padding: 0.85rem 2rem;">Staff Login →</button>
+          <button class="btn-action" onclick="openLoginSheet()" style="font-size: 1.15rem; padding: 1rem 2.5rem;">
+            Staff Access Terminal →
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- SCREEN 2: DASHBOARD -->
-    <div id="screen-dashboard" class="screen active">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-        <div>
-          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--navy-900);">Operations Dashboard</h1>
-          <p style="color: var(--slate-500); font-size: 0.9rem;">Overview of branch fleet availability and booking metrics</p>
+    <!-- ========================================== -->
+    <!-- VIEW 2: OPERATIONS DASHBOARD (Redesigned)   -->
+    <!-- ========================================== -->
+    <div id="view-dashboard" class="view-screen active">
+
+      <!-- Dynamic Highway Animation Hero Card -->
+      <div class="hero-highway-card">
+        <div class="hero-header-row">
+          <div class="hero-title-group">
+            <h1>Fleet Operations Center</h1>
+            <p>Real-time vehicle availability, live telemetry, and customer reservations</p>
+          </div>
+          <div class="highway-controls">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Throttle:</span>
+            <button class="speed-btn" onclick="setHighwaySpeed(1.8, this)">Eco (45mph)</button>
+            <button class="speed-btn active" onclick="setHighwaySpeed(1.0, this)">Cruising (70mph)</button>
+            <button class="speed-btn" onclick="setHighwaySpeed(0.4, this)">Sport (140mph) ⚡</button>
+          </div>
         </div>
-        <button class="btn btn-primary" onclick="navigate('new-booking')">➕ Register New Booking</button>
+
+        <!-- The Highway Canvas / Animation Stage -->
+        <div class="highway-stage" id="highwayStage">
+          <div class="highway-skyline"></div>
+          <div class="highway-road">
+            <div class="road-lanes" id="roadLanes"></div>
+          </div>
+          <div class="street-poles" id="streetPoles"></div>
+
+          <!-- Cruising Animated Vehicle -->
+          <div class="vehicle-cruiser" id="vehicleCruiser">
+            <div class="car-chassis-wrap">
+              <!-- Dynamic Headlight Beam Casting on Asphalt -->
+              <div class="headlight-beam"></div>
+              <div class="taillight-trail"></div>
+
+              <!-- Animated Vector Car Silhouette (Sports Car Default) -->
+              <div id="carSvgContainer">
+                <!-- SVG dynamically injected by JS based on selected car -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car Switcher Bar right under highway -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;">
+          <div style="display: flex; gap: 0.6rem; align-items: center;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Showcase Vehicle:</span>
+            <button class="speed-btn" onclick="changeShowcaseCar('SportsCar')">🏎️ Sports Car</button>
+            <button class="speed-btn active" onclick="changeShowcaseCar('SUV')">🚙 Luxury SUV</button>
+            <button class="speed-btn" onclick="changeShowcaseCar('FamilyCar')">🚗 Family Car</button>
+            <button class="speed-btn" onclick="changeShowcaseCar('CityCar')">🚘 City Car</button>
+          </div>
+          <button class="btn-action" style="padding: 0.6rem 1.4rem; font-size: 0.9rem;" onclick="showScreen('new-booking')">
+            ➕ Register New Booking
+          </button>
+        </div>
       </div>
 
       <!-- 4 Live KPI Cards -->
-      <div class="grid-4" style="margin-bottom: 2rem;">
-        <div class="kpi-card">
-          <div class="kpi-header"><span>TOTAL FLEET</span> <span>🚘</span></div>
-          <div class="kpi-val" id="kpiTotal">10</div>
-          <div class="kpi-desc">Registered Sunderland vehicles</div>
+      <div class="kpi-grid">
+        <div class="kpi-glass-card" style="--card-accent: #00F5D4;">
+          <div class="kpi-top">
+            <span>TOTAL FLEET</span>
+            <div class="kpi-icon-pill">🚘</div>
+          </div>
+          <div class="kpi-number" id="kpiFleetTotal">10</div>
+          <div class="kpi-subtext">Registered Sunderland cars</div>
         </div>
-        <div class="kpi-card" style="border-left: 4px solid var(--teal-600);">
-          <div class="kpi-header"><span>AVAILABLE</span> <span>✅</span></div>
-          <div class="kpi-val" id="kpiAvailable" style="color: var(--teal-600);">10</div>
-          <div class="kpi-desc">Ready for immediate hire</div>
+
+        <div class="kpi-glass-card" style="--card-accent: #10B981;">
+          <div class="kpi-top">
+            <span>AVAILABLE NOW</span>
+            <div class="kpi-icon-pill">✅</div>
+          </div>
+          <div class="kpi-number" id="kpiAvailableCount" style="color: #34D399;">10</div>
+          <div class="kpi-subtext">Ready for immediate hire</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-header"><span>RENTED CARS</span> <span>🔑</span></div>
-          <div class="kpi-val" id="kpiRented">0</div>
-          <div class="kpi-desc">Currently on active hire</div>
+
+        <div class="kpi-glass-card" style="--card-accent: #F43F5E;">
+          <div class="kpi-top">
+            <span>RENTED VEHICLES</span>
+            <div class="kpi-icon-pill">🔑</div>
+          </div>
+          <div class="kpi-number" id="kpiRentedCount" style="color: #FB7185;">0</div>
+          <div class="kpi-subtext">Active client hire contracts</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-header"><span>TOTAL BOOKINGS</span> <span>📝</span></div>
-          <div class="kpi-val" id="kpiBookings">0</div>
-          <div class="kpi-desc">Lifetime processed records</div>
+
+        <div class="kpi-glass-card" style="--card-accent: #8B5CF6;">
+          <div class="kpi-top">
+            <span>TOTAL BOOKINGS</span>
+            <div class="kpi-icon-pill">📝</div>
+          </div>
+          <div class="kpi-number" id="kpiBookingsCount" style="color: #C084FC;">0</div>
+          <div class="kpi-subtext">Lifetime processed reservations</div>
         </div>
       </div>
 
-      <!-- Quick Actions & System Info -->
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
+      <!-- Quick Actions & System Info Grid -->
+      <div class="grid-duo">
+        <div class="glass-panel">
+          <div class="panel-header">
             <div>
-              <div class="card-title">Quick Actions</div>
-              <div class="card-subtitle">Fast links to core branch workflows</div>
+              <div class="panel-title">Quick Action Hub</div>
+              <div class="panel-subtitle">Standard workflows for branch operations</div>
             </div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <button class="btn btn-secondary" style="justify-content: flex-start;" onclick="navigate('new-booking')">
-              ➕ <strong>New Booking Desk:</strong> Collect customer details & allocate car
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <button class="btn-ghost" style="display: flex; justify-content: space-between; align-items: center;" onclick="showScreen('new-booking')">
+              <span>➕ <strong>New Booking Desk:</strong> Collect customer details & allocate vehicle</span>
+              <span>→</span>
             </button>
-            <button class="btn btn-secondary" style="justify-content: flex-start;" onclick="navigate('rented-cars')">
-              🚗 <strong>Rented Cars Report:</strong> View active hire contracts & daily rates
+            <button class="btn-ghost" style="display: flex; justify-content: space-between; align-items: center;" onclick="showScreen('rented-cars')">
+              <span>🚗 <strong>Rented Cars Report:</strong> View active rental contracts & rates</span>
+              <span>→</span>
             </button>
-            <button class="btn btn-secondary" style="justify-content: flex-start;" onclick="navigate('booking-history')">
-              📜 <strong>Booking History:</strong> Retrieve past reservations & saved extras
+            <button class="btn-ghost" style="display: flex; justify-content: space-between; align-items: center;" onclick="showScreen('booking-history')">
+              <span>📜 <strong>Booking History:</strong> Retrieve past reservations & saved extras</span>
+              <span>→</span>
             </button>
-            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="loadBenchmarkAndOpen()">
-              ⚡ <strong>Test Benchmark:</strong> Pre-fill 3-day SUV Hybrid with both extras (£206.00)
+            <button class="btn-action" style="justify-content: center; margin-top: 0.5rem;" onclick="loadBenchmarkAndJump()">
+              ⚡ Load £206 Assignment Benchmark (3-Day SUV Hybrid)
             </button>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
+        <div class="glass-panel">
+          <div class="panel-header">
             <div>
-              <div class="card-title">System Status</div>
-              <div class="card-subtitle">Environment & Database Connection</div>
+              <div class="panel-title">System & Security Status</div>
+              <div class="panel-subtitle">Environment & Database Readiness</div>
             </div>
-            <span class="badge badge-teal">ONLINE</span>
+            <span class="neon-pill">OPERATIONAL</span>
           </div>
-          <div style="font-size: 0.875rem; color: var(--navy-800); line-height: 1.8;">
-            <p><strong>Database:</strong> SQL Server LocalDB Simulation Active</p>
-            <p><strong>Branch:</strong> Sunderland Operations Hub</p>
-            <p><strong>Fixed Staff User:</strong> <code>sta001</code></p>
-            <p><strong>Pricing Rules:</strong> Base £25/day • Strict Decimal Arithmetic</p>
-            <p><strong>Concurrency Lock:</strong> Atomic UPDLOCK / ROWLOCK transaction</p>
+          <div style="font-size: 0.9rem; line-height: 2; color: var(--text-muted);">
+            <p><strong>Database Connection:</strong> <span style="color: white;">SQL Server LocalDB (RentOnCarsDB)</span></p>
+            <p><strong>Fleet Base Rate:</strong> <span style="color: var(--teal-bright); font-family: 'JetBrains Mono';">£25.00 / day</span></p>
+            <p><strong>Staff Authorization:</strong> <span style="color: white;">Active (Username: sta001)</span></p>
+            <p><strong>Concurrency Locking:</strong> <span style="color: white;">Atomic UPDLOCK, ROWLOCK, HOLDLOCK</span></p>
+            <p><strong>Audit Trail:</strong> <span style="color: white;">Persistent login & transaction logging</span></p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- SCREEN 3: NEW BOOKING -->
-    <div id="screen-new-booking" class="screen">
-      <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <!-- ========================================== -->
+    <!-- VIEW 3: NEW BOOKING (Interactive Redesign) -->
+    <!-- ========================================== -->
+    <div id="view-new-booking" class="view-screen">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
-          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--navy-900);">New Car Reservation</h1>
-          <p style="color: var(--slate-500); font-size: 0.9rem;">Fill customer details, select vehicle specs, and review itemized quotation</p>
+          <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em;">New Vehicle Reservation</h1>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Step-by-step customer onboarding with real-time decimal quotation calculation</p>
         </div>
-        <button class="btn btn-outline" onclick="loadBenchmark()">⚡ Load £206 Benchmark (SUV Hybrid)</button>
+        <button class="btn-ghost" style="border-color: var(--teal-bright); color: var(--teal-bright);" onclick="loadBenchmarkValues()">
+          ⚡ Quick Fill £206 Benchmark (SUV Hybrid)
+        </button>
       </div>
 
-      <div class="booking-grid">
-        <!-- Left: Form inputs -->
+      <div class="booking-split-view">
+        <!-- Left: Form Controls -->
         <div>
-          <!-- Customer Information -->
-          <div class="card" style="margin-bottom: 1.5rem;">
-            <div class="card-header">
-              <div class="card-title">1. Customer Information</div>
+          <!-- Step 1: Customer Details -->
+          <div class="glass-panel" style="margin-bottom: 2rem;">
+            <div class="panel-header">
+              <div class="panel-title">1. Customer Identification</div>
             </div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label" for="inpFirstName">First Name *</label>
-                <input type="text" id="inpFirstName" class="form-control" placeholder="e.g. John" maxlength="50" oninput="validateForm()">
-                <div class="error-feedback" id="errFirstName">First name is required (max 50 chars).</div>
+
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label" for="inpFName">First Name *</label>
+                <input type="text" id="inpFName" class="glow-input" placeholder="e.g. John" maxlength="50" oninput="runValidation()">
+                <div class="error-msg" id="errFName">First name is required (max 50 chars).</div>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="inpSurname">Surname *</label>
-                <input type="text" id="inpSurname" class="form-control" placeholder="e.g. Smith" maxlength="50" oninput="validateForm()">
-                <div class="error-feedback" id="errSurname">Surname is required (mandatory per assignment).</div>
+              <div class="field-group">
+                <label class="field-label" for="inpSName">Surname *</label>
+                <input type="text" id="inpSName" class="glow-input" placeholder="e.g. Smith" maxlength="50" oninput="runValidation()">
+                <div class="error-msg" id="errSName">Surname is required (mandatory per assignment rule).</div>
               </div>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="inpAddress">Address *</label>
-              <input type="text" id="inpAddress" class="form-control" placeholder="e.g. 14 High Street, Sunderland, SR1 3PZ" maxlength="150" oninput="validateForm()">
-              <div class="error-feedback" id="errAddress">Customer address is required (max 150 chars).</div>
+
+            <div class="field-group">
+              <label class="field-label" for="inpAddress">Address *</label>
+              <input type="text" id="inpAddress" class="glow-input" placeholder="e.g. 14 High Street, Sunderland, SR1 3PZ" maxlength="150" oninput="runValidation()">
+              <div class="error-msg" id="errAddress">Customer address is required (max 150 chars).</div>
             </div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label" for="inpAge">Customer Age (Min 18) *</label>
-                <input type="number" id="inpAge" class="form-control" min="16" max="120" value="25" oninput="validateForm()">
-                <div class="error-feedback" id="errAge">Customer must be at least 18 years of age.</div>
+
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label" for="inpAge">Customer Age (Minimum 18) *</label>
+                <input type="number" id="inpAge" class="glow-input" min="16" max="120" value="26" oninput="runValidation()">
+                <div class="error-msg" id="errAge">Customer must be at least 18 years of age.</div>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="selLicense">Valid Driving Licence? *</label>
-                <select id="selLicense" class="form-control" onchange="validateForm()">
-                  <option value="yes" selected>Yes - Valid UK / International Licence</option>
-                  <option value="no">No - Licence invalid / missing</option>
+              <div class="field-group">
+                <label class="field-label" for="selLic">Valid Driving Licence? *</label>
+                <select id="selLic" class="glow-input" onchange="runValidation()">
+                  <option value="yes" selected>Yes - Valid Full UK / EU Licence</option>
+                  <option value="no">No - Invalid or Missing Licence</option>
                 </select>
-                <div class="error-feedback" id="errLicense">Valid licence is mandatory to book a vehicle.</div>
+                <div class="error-msg" id="errLic">A valid driving licence is mandatory to rent.</div>
               </div>
             </div>
           </div>
 
-          <!-- Rental & Vehicle Options -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">2. Rental Duration & Vehicle Specifications</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="inpDays">Rental Duration (1 to 28 days) *</label>
-              <input type="number" id="inpDays" class="form-control" min="1" max="28" value="3" oninput="recalculateQuote(); validateForm();">
-              <div class="error-feedback" id="errDays">Rental days must be between 1 and 28. Base rate is £25/day.</div>
-            </div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label" for="selCategory">Vehicle Category *</label>
-                <select id="selCategory" class="form-control" onchange="recalculateQuote(); updateVehicleAllocation();">
-                  <option value="CityCar">City Car (No surcharge)</option>
-                  <option value="FamilyCar">Family Car (+£50.00)</option>
-                  <option value="SportsCar">Sports Car (+£75.00)</option>
-                  <option value="SUV" selected>SUV (+£65.00)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="selFuel">Fuel Type *</label>
-                <select id="selFuel" class="form-control" onchange="recalculateQuote(); updateVehicleAllocation();">
-                  <option value="Petrol">Petrol (No surcharge)</option>
-                  <option value="Diesel">Diesel (No surcharge)</option>
-                  <option value="Hybrid" selected>Hybrid (+£30.00)</option>
-                  <option value="FullElectric">Full Electric (+£50.00)</option>
-                </select>
+          <!-- Step 2: Vehicle Selection & Specs -->
+          <div class="glass-panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">2. Select Vehicle Category</div>
+                <div class="panel-subtitle">Click a car model to inspect specifications and surcharge</div>
               </div>
             </div>
 
-            <!-- Optional Extras -->
-            <div class="form-group" style="margin-top: 1rem;">
-              <label class="form-label">Optional Extras (Per Day)</label>
-              <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
-                  <input type="checkbox" id="chkMileage" checked onchange="recalculateQuote()">
-                  Unlimited Mileage (+£10.00 / day)
-                </label>
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
-                  <input type="checkbox" id="chkBreakdown" checked onchange="recalculateQuote()">
-                  Breakdown Cover (+£2.00 / day)
-                </label>
+            <!-- Visual 4-Card Vehicle Picker -->
+            <div class="vehicle-selector-grid">
+              <!-- City Car -->
+              <div class="vehicle-model-card" id="cardCityCar" onclick="selectCategory('CityCar')">
+                <div class="v-thumb">
+                  <svg width="120" height="45" viewBox="0 0 160 60" fill="none">
+                    <path d="M20 40 L35 22 L75 18 L110 24 L130 36 L145 40 L145 46 L15 46 Z" fill="#2DD4BF" opacity="0.8"/>
+                    <circle cx="45" cy="46" r="10" fill="#0E1626" stroke="#2DD4BF" stroke-width="3"/>
+                    <circle cx="120" cy="46" r="10" fill="#0E1626" stroke="#2DD4BF" stroke-width="3"/>
+                  </svg>
+                </div>
+                <div class="v-name">City Car</div>
+                <div class="v-surcharge">£0.00 Surcharge</div>
+                <div class="v-spec-tags">
+                  <span class="spec-tag">4 Seats</span>
+                  <span class="spec-tag">Compact</span>
+                  <span class="spec-tag">Easy Park</span>
+                </div>
+              </div>
+
+              <!-- Family Car -->
+              <div class="vehicle-model-card" id="cardFamilyCar" onclick="selectCategory('FamilyCar')">
+                <div class="v-thumb">
+                  <svg width="130" height="45" viewBox="0 0 170 60" fill="none">
+                    <path d="M15 40 L35 22 L115 20 L135 32 L155 40 L155 46 L10 46 Z" fill="#00BBF9" opacity="0.8"/>
+                    <circle cx="45" cy="46" r="10" fill="#0E1626" stroke="#00BBF9" stroke-width="3"/>
+                    <circle cx="130" cy="46" r="10" fill="#0E1626" stroke="#00BBF9" stroke-width="3"/>
+                  </svg>
+                </div>
+                <div class="v-name">Family Car</div>
+                <div class="v-surcharge">+£50.00 Surcharge</div>
+                <div class="v-spec-tags">
+                  <span class="spec-tag">5 Seats</span>
+                  <span class="spec-tag">Spacious Boot</span>
+                  <span class="spec-tag">ISOFIX</span>
+                </div>
+              </div>
+
+              <!-- Sports Car -->
+              <div class="vehicle-model-card" id="cardSportsCar" onclick="selectCategory('SportsCar')">
+                <div class="v-thumb">
+                  <svg width="140" height="45" viewBox="0 0 180 60" fill="none">
+                    <path d="M15 42 L45 28 L95 24 L145 36 L165 42 L165 47 L10 47 Z" fill="#F43F5E" opacity="0.8"/>
+                    <path d="M5 36 L25 36 L20 42 Z" fill="#F43F5E"/> <!-- Rear spoiler -->
+                    <circle cx="50" cy="47" r="10" fill="#0E1626" stroke="#F43F5E" stroke-width="3"/>
+                    <circle cx="135" cy="47" r="10" fill="#0E1626" stroke="#F43F5E" stroke-width="3"/>
+                  </svg>
+                </div>
+                <div class="v-name">Sports Car</div>
+                <div class="v-surcharge">+£75.00 Surcharge</div>
+                <div class="v-spec-tags">
+                  <span class="spec-tag">2 Seats</span>
+                  <span class="spec-tag">0-60: 3.8s</span>
+                  <span class="spec-tag">Sport Exhaust</span>
+                </div>
+              </div>
+
+              <!-- SUV (Default) -->
+              <div class="vehicle-model-card selected" id="cardSUV" onclick="selectCategory('SUV')">
+                <div class="v-thumb">
+                  <svg width="135" height="50" viewBox="0 0 170 65" fill="none">
+                    <path d="M15 44 L30 18 L100 16 L125 30 L155 42 L155 50 L10 50 Z" fill="#00F5D4" opacity="0.85"/>
+                    <circle cx="45" cy="50" r="12" fill="#0E1626" stroke="#00F5D4" stroke-width="3.5"/>
+                    <circle cx="130" cy="50" r="12" fill="#0E1626" stroke="#00F5D4" stroke-width="3.5"/>
+                  </svg>
+                </div>
+                <div class="v-name">Luxury SUV</div>
+                <div class="v-surcharge">+£65.00 Surcharge</div>
+                <div class="v-spec-tags">
+                  <span class="spec-tag">7 Seats</span>
+                  <span class="spec-tag">AWD / 4x4</span>
+                  <span class="spec-tag">High Clearance</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fuel Type Chips -->
+            <label class="field-label">Fuel Propulsion Type *</label>
+            <div class="fuel-chips-wrap">
+              <div class="fuel-chip" id="chipPetrol" onclick="selectFuel('Petrol')">
+                <div class="fuel-chip-title">⛽ Petrol</div>
+                <div class="fuel-chip-sub">£0 Surcharge</div>
+              </div>
+              <div class="fuel-chip" id="chipDiesel" onclick="selectFuel('Diesel')">
+                <div class="fuel-chip-title">⛽ Diesel</div>
+                <div class="fuel-chip-sub">£0 Surcharge</div>
+              </div>
+              <div class="fuel-chip selected" id="chipHybrid" onclick="selectFuel('Hybrid')">
+                <div class="fuel-chip-title">🔋 Hybrid</div>
+                <div class="fuel-chip-sub">+£30 Surcharge</div>
+              </div>
+              <div class="fuel-chip" id="chipFullElectric" onclick="selectFuel('FullElectric')">
+                <div class="fuel-chip-title">⚡ Electric</div>
+                <div class="fuel-chip-sub">+£50 Surcharge</div>
+              </div>
+            </div>
+
+            <!-- Rental Days & Extras -->
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label" for="inpDaysVal">Rental Duration (1 to 28 days) *</label>
+                <input type="number" id="inpDaysVal" class="glow-input" min="1" max="28" value="3" oninput="updatePricingCalculation(); runValidation();">
+                <div class="error-msg" id="errDays">Rental days must be between 1 and 28.</div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Optional Daily Extras</label>
+                <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.35rem;">
+                  <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" id="chkExtraMileage" checked onchange="updatePricingCalculation()" style="accent-color: var(--teal-bright); width: 18px; height: 18px;">
+                    <span>Unlimited Mileage (+£10.00 / day)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" id="chkExtraBreakdown" checked onchange="updatePricingCalculation()" style="accent-color: var(--teal-bright); width: 18px; height: 18px;">
+                    <span>Breakdown Cover (+£2.00 / day)</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right: Live Quote Sidebar -->
+        <!-- Right: Live Persistent Quotation Box -->
         <div>
-          <div class="card quote-card" style="position: sticky; top: 80px;">
-            <div class="card-header" style="border-bottom: 1px solid var(--slate-200); padding-bottom: 0.75rem;">
+          <div class="live-quote-box">
+            <div class="quote-badge-row">
               <div>
-                <div class="card-title">Live Itemized Bill</div>
-                <div class="card-subtitle">Real-time decimal quote calculation</div>
+                <h3 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; color: white;">Live Quotation</h3>
+                <p style="font-size: 0.775rem; color: var(--text-muted);">Real-time decimal arithmetic</p>
               </div>
-              <span class="badge badge-teal" id="quoteBadge">LIVE ESTIMATE</span>
+              <span class="neon-pill" id="quoteStatusPill">LIVE ESTIMATE</span>
             </div>
 
-            <!-- Allocated car alert -->
-            <div style="background: var(--teal-50); border: 1px solid var(--teal-100); border-radius: var(--radius-sm); padding: 0.75rem; margin: 1rem 0; font-size: 0.85rem; color: var(--navy-800);">
-              <div style="font-weight: 700; color: var(--teal-600); margin-bottom: 0.2rem;">Vehicle Allocation Status:</div>
-              <div id="allocationText">Allocated: <strong>[WAC-008]</strong> SUV (Hybrid)</div>
-            </div>
-
-            <div style="margin: 1rem 0;">
-              <div class="quote-row">
-                <span>Base Rental (<span id="qDays">3</span> days @ £25.00/day):</span>
-                <strong id="qBase">£75.00</strong>
-              </div>
-              <div class="quote-row">
-                <span>Vehicle Surcharge (<span id="qCatName">SUV</span>):</span>
-                <strong id="qCatSurcharge">£65.00</strong>
-              </div>
-              <div class="quote-row">
-                <span>Fuel Surcharge (<span id="qFuelName">Hybrid</span>):</span>
-                <strong id="qFuelSurcharge">£30.00</strong>
-              </div>
-              <div class="quote-row">
-                <span>Daily Extras (<span id="qExtrasRate">£12.00</span>/day × <span id="qExtrasDays">3</span> days):</span>
-                <strong id="qExtrasTotal">£36.00</strong>
-              </div>
-              <div class="quote-row total">
-                <span>Total Quotation:</span>
-                <span class="quote-total-amount" id="qTotal">£206.00</span>
+            <!-- Allocated Car Badge -->
+            <div class="car-allocated-card">
+              <div class="car-allocated-icon">🚘</div>
+              <div>
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Allocated Vehicle</div>
+                <div style="font-size: 1.05rem; font-weight: 800; color: white;" id="allocSummaryText">[WAC-008] SUV (Hybrid)</div>
+                <div style="font-size: 0.75rem; color: var(--teal-bright);">Verified Available in Sunderland Fleet</div>
               </div>
             </div>
 
-            <button class="btn btn-primary" id="btnReview" style="width: 100%; margin-top: 1rem; padding: 0.85rem;" onclick="openReviewModal()">
+            <!-- Breakdown Lines -->
+            <div>
+              <div class="quote-line">
+                <span>Base Fleet Rate (<span id="lineDaysCount">3</span> days @ £25.00/day):</span>
+                <strong id="lineBaseTotal">£75.00</strong>
+              </div>
+              <div class="quote-line">
+                <span>Vehicle Surcharge (<span id="lineCatName">SUV</span>):</span>
+                <strong id="lineCatSurcharge">£65.00</strong>
+              </div>
+              <div class="quote-line">
+                <span>Fuel Surcharge (<span id="lineFuelName">Hybrid</span>):</span>
+                <strong id="lineFuelSurcharge">£30.00</strong>
+              </div>
+              <div class="quote-line">
+                <span>Daily Extras (<span id="lineExtrasRate">£12.00</span>/day × <span id="lineExtrasDays">3</span> days):</span>
+                <strong id="lineExtrasTotal">£36.00</strong>
+              </div>
+            </div>
+
+            <!-- Total Price Display -->
+            <div class="quote-total-card">
+              <div>
+                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;">Total Payable</div>
+                <div style="font-size: 0.75rem; color: var(--text-dark);">Strict decimal calculation</div>
+              </div>
+              <div class="total-price-display" id="lineGrandTotal">£206.00</div>
+            </div>
+
+            <button class="btn-action" id="btnLaunchReview" style="width: 100%; margin-top: 1.5rem;" onclick="openReviewSheet()">
               Review Booking & Bill →
             </button>
             <div style="text-align: center; margin-top: 0.75rem;">
-              <small style="color: var(--slate-500); font-size: 0.75rem;">Staff must explicitly confirm before saving to database.</small>
+              <span style="font-size: 0.75rem; color: var(--text-dark);">Staff must explicitly review before database persistence.</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- SCREEN 4: RENTED CARS REPORT -->
-    <div id="screen-rented-cars" class="screen">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <!-- ========================================== -->
+    <!-- VIEW 4: RENTED CARS REPORT                 -->
+    <!-- ========================================== -->
+    <div id="view-rented-cars" class="view-screen">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
-          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--navy-900);">Fleet Rented Status</h1>
-          <p style="color: var(--slate-500); font-size: 0.9rem;">Inspect all vehicles and active rental contracts</p>
+          <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em;">Fleet Rented Status</h1>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Track real-time vehicle allocation, daily tariffs, and return vehicles</p>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-          <input type="text" id="inpFilterCars" class="form-control" placeholder="Search registration or category..." style="width: 260px;" oninput="renderFleetTable()">
-          <button class="btn btn-secondary" onclick="renderFleetTable()">🔄 Refresh</button>
+          <input type="text" id="filterFleetInp" class="glow-input" placeholder="Search registration or category..." style="width: 280px;" oninput="drawFleetTable()">
+          <button class="btn-ghost" onclick="drawFleetTable()">🔄 Refresh Fleet</button>
         </div>
       </div>
 
-      <div class="table-container">
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>
               <th>Registration</th>
-              <th>Vehicle Category</th>
-              <th>Fuel Type</th>
-              <th>Daily Rate</th>
+              <th>Category</th>
+              <th>Fuel Propulsion</th>
+              <th>Daily Tariff</th>
               <th>Rental Status</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody id="fleetTableBody">
+          <tbody id="fleetTableContent">
             <!-- Dynamically populated -->
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- SCREEN 5: BOOKING HISTORY -->
-    <div id="screen-booking-history" class="screen">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <!-- ========================================== -->
+    <!-- VIEW 5: BOOKING HISTORY LEDGER             -->
+    <!-- ========================================== -->
+    <div id="view-booking-history" class="view-screen">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
-          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--navy-900);">Booking History Ledger</h1>
-          <p style="color: var(--slate-500); font-size: 0.9rem;">Historical reservations with saved optional extras and stored bill totals</p>
+          <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em;">Booking History Ledger</h1>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Audit past reservations, stored bill totals, and saved optional extras</p>
         </div>
-        <button class="btn btn-secondary" onclick="renderHistoryTable()">🔄 Refresh</button>
+        <button class="btn-ghost" onclick="drawHistoryTable()">🔄 Refresh Records</button>
       </div>
 
-      <div class="table-container">
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>
-              <th>Booking ID</th>
-              <th>Date Created</th>
-              <th>Customer Name</th>
+              <th>Reference ID</th>
+              <th>Timestamp</th>
+              <th>Client Name</th>
               <th>Allocated Vehicle</th>
               <th>Duration</th>
-              <th>Optional Extras</th>
+              <th>Saved Extras</th>
               <th>Stored Total</th>
-              <th>Details</th>
+              <th>Voucher</th>
             </tr>
           </thead>
-          <tbody id="historyTableBody">
+          <tbody id="historyTableContent">
             <!-- Dynamically populated -->
           </tbody>
         </table>
@@ -496,102 +1494,110 @@
 
   </main>
 
-  <!-- MODAL: LOGIN DIALOG -->
-  <div class="modal-overlay" id="modalLogin">
-    <div class="modal-box" style="max-width: 440px;">
-      <div class="modal-header">
-        <div style="font-weight: 700; font-size: 1.15rem;">Staff Authentication</div>
-        <button onclick="closeLoginModal()" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">✕</button>
-      </div>
-      <div class="modal-body">
-        <div id="loginAlert" style="display: none; background: #FEE2E2; border: 1px solid #FCA5A5; color: #991B1B; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem; font-weight: 600;">
-          Invalid credentials. Please verify your staff username and password.
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="loginUser">Staff Username</label>
-          <input type="text" id="loginUser" class="form-control" value="sta001" placeholder="sta001">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="loginPass">Password</label>
-          <div style="position: relative;">
-            <input type="password" id="loginPass" class="form-control" value="givemethekeys123" placeholder="givemethekeys123" style="padding-right: 2.5rem;">
-            <button type="button" onclick="togglePassVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem;">👁️</button>
-          </div>
-          <div class="input-hint">Default staff credentials: <code>sta001</code> / <code>givemethekeys123</code></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="submitLogin()">Sign In →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: PRE-COMMIT REVIEW DIALOG (BookingReviewDialog) -->
-  <div class="modal-overlay" id="modalReview">
-    <div class="modal-box">
-      <div class="modal-header">
+  <!-- ========================================== -->
+  <!-- MODAL 1: PRE-COMMIT REVIEW (ReviewDialog)  -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="sheetReview">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
         <div>
-          <div style="font-weight: 700; font-size: 1.15rem;">Review Booking & Bill</div>
-          <div style="font-size: 0.8rem; color: #94A3B8;">Confirm all details before atomic database commitment</div>
+          <div style="font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; color: white;">Review Booking & Bill</div>
+          <div style="font-size: 0.8rem; color: var(--teal-bright);">Verify details before atomic database commitment</div>
         </div>
-        <button onclick="closeReviewModal()" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">✕</button>
+        <button onclick="closeReviewSheet()" style="background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
-      <div class="modal-body">
-        <h4 style="font-size: 0.9rem; text-transform: uppercase; color: var(--slate-500); margin-bottom: 0.5rem;">Customer Details</h4>
-        <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.9rem; line-height: 1.6;">
-          <p><strong>Name:</strong> <span id="revCustName">John Smith</span> (Age: <span id="revCustAge">25</span>)</p>
-          <p><strong>Address:</strong> <span id="revCustAddress">14 High Street, Sunderland</span></p>
-          <p><strong>Licence Status:</strong> <span class="badge badge-green">Confirmed Valid</span></p>
+      <div class="modal-sheet-body">
+        <h4 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 0.6rem;">1. Customer Profile</h4>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <p><strong>Client Name:</strong> <span id="revModalCustName" style="color: white;">John Smith</span> (Age: <span id="revModalCustAge">26</span>)</p>
+          <p><strong>Address:</strong> <span id="revModalCustAddr" style="color: white;">14 High Street, Sunderland</span></p>
+          <p><strong>Licence Status:</strong> <span class="badge-status badge-avail">Confirmed Valid</span></p>
         </div>
 
-        <h4 style="font-size: 0.9rem; text-transform: uppercase; color: var(--slate-500); margin-bottom: 0.5rem;">Vehicle & Quotation Summary</h4>
-        <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.9rem; line-height: 1.6;">
-          <p><strong>Allocated Car:</strong> <span id="revCar">SUV [WAC-008] (Hybrid)</span></p>
-          <p><strong>Rental Duration:</strong> <span id="revDays">3</span> days (@ £25.00/day)</p>
-          <p><strong>Selected Extras:</strong> <span id="revExtras">Unlimited Mileage, Breakdown Cover</span></p>
-          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--slate-300); display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem; color: var(--navy-900);">
-            <span>Total Payable:</span>
-            <span style="color: var(--teal-600);" id="revTotal">£206.00</span>
+        <h4 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 0.6rem;">2. Vehicle & Financial Commitment</h4>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; line-height: 1.8;">
+          <p><strong>Allocated Car:</strong> <span id="revModalCar" style="color: var(--teal-bright); font-weight: 700;">SUV [WAC-008] (Hybrid)</span></p>
+          <p><strong>Duration:</strong> <span id="revModalDays">3</span> days (@ £25.00 base/day)</p>
+          <p><strong>Optional Extras:</strong> <span id="revModalExtras" style="color: white;">Unlimited Mileage, Breakdown Cover</span></p>
+          
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255, 255, 255, 0.15); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 800; font-size: 1.1rem; color: white;">Final Calculated Bill:</span>
+            <span style="font-family: 'JetBrains Mono'; font-size: 1.6rem; font-weight: 800; color: var(--teal-neon);" id="revModalTotal">£206.00</span>
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeReviewModal()">← Return to Edit</button>
-        <button class="btn btn-primary" onclick="confirmAndSaveBooking()">Confirm & Save Booking ✓</button>
+      <div class="modal-sheet-footer">
+        <button class="btn-ghost" onclick="closeReviewSheet()">← Return to Edit</button>
+        <button class="btn-action" onclick="commitBookingNow()">Confirm & Save Booking ✓</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: RECEIPT & SUCCESS -->
-  <div class="modal-overlay" id="modalReceipt">
-    <div class="modal-box" style="text-align: center;">
-      <div class="modal-header" style="background: var(--teal-600); justify-content: center;">
-        <div style="font-weight: 800; font-size: 1.25rem;">Booking Confirmed! 🎉</div>
+  <!-- ========================================== -->
+  <!-- MODAL 2: OFFICIAL RECEIPT VOUCHER          -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="sheetReceipt">
+    <div class="modal-sheet" style="text-align: center;">
+      <div class="modal-sheet-header" style="background: linear-gradient(135deg, #0D9488, #00F5D4); color: #070B12; justify-content: center;">
+        <div style="font-family: 'Outfit'; font-size: 1.35rem; font-weight: 900;">Reservation Confirmed! 🎉</div>
       </div>
-      <div class="modal-body" style="padding: 2.5rem 1.75rem;">
-        <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">🧾</div>
-        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--navy-900); margin-bottom: 0.35rem;">WeAreCars Official Receipt</h2>
-        <p style="color: var(--slate-500); font-size: 0.875rem; margin-bottom: 1.5rem;">The reservation was saved atomically into the database.</p>
+      <div class="modal-sheet-body" style="padding: 2.5rem 2rem;">
+        <div style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: pulseDot 1.5s infinite;">🧾</div>
+        <h2 style="font-family: 'Outfit'; font-size: 1.6rem; font-weight: 800; color: white; margin-bottom: 0.25rem;">Official WeAreCars Receipt</h2>
+        <p style="color: var(--teal-bright); font-size: 0.85rem; margin-bottom: 1.75rem;">Vehicle status updated to RENTED atomically in database</p>
 
-        <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem; text-align: left; font-size: 0.9rem; line-height: 1.8;">
-          <p><strong>Booking Reference:</strong> <span class="badge badge-teal" id="recId">BK-1001</span></p>
-          <p><strong>Allocated Registration:</strong> <strong id="recReg">WAC-008</strong></p>
-          <p><strong>Customer:</strong> <span id="recCustomer">John Smith</span></p>
-          <p><strong>Duration:</strong> <span id="recDays">3 days</span></p>
-          <p><strong>Amount Charged:</strong> <strong style="color: var(--teal-600); font-size: 1.15rem;" id="recTotal">£206.00</strong></p>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; text-align: left; line-height: 2;">
+          <p><strong>Booking Reference:</strong> <span class="neon-pill" id="recVoucherId">BK-1001</span></p>
+          <p><strong>Registration Number:</strong> <strong style="color: var(--teal-bright); font-size: 1.1rem;" id="recVoucherReg">WAC-008</strong></p>
+          <p><strong>Client:</strong> <span id="recVoucherClient" style="color: white;">John Smith</span></p>
+          <p><strong>Rental Period:</strong> <span id="recVoucherDays" style="color: white;">3 Days</span></p>
+          <p><strong>Total Paid:</strong> <strong style="color: var(--teal-neon); font-family: 'JetBrains Mono'; font-size: 1.35rem;" id="recVoucherPrice">£206.00</strong></p>
         </div>
       </div>
-      <div class="modal-footer" style="justify-content: center; gap: 1rem;">
-        <button class="btn btn-secondary" onclick="closeReceiptModal(); navigate('dashboard');">Back to Dashboard</button>
-        <button class="btn btn-primary" onclick="closeReceiptModal(); navigate('booking-history');">View Booking History →</button>
+      <div class="modal-sheet-footer" style="justify-content: center; gap: 1rem;">
+        <button class="btn-ghost" onclick="closeReceiptSheet(); showScreen('dashboard');">Return to Dashboard</button>
+        <button class="btn-action" onclick="closeReceiptSheet(); showScreen('booking-history');">View Booking History →</button>
       </div>
     </div>
   </div>
 
+  <!-- ========================================== -->
+  <!-- MODAL 3: STAFF LOGIN DIALOG                -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="sheetLogin">
+    <div class="modal-sheet" style="max-width: 440px;">
+      <div class="modal-sheet-header">
+        <div style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; color: white;">Staff Authorization</div>
+        <button onclick="closeLoginSheet()" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div id="loginFeedbackAlert" style="display: none; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.4); color: #FB7185; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.85rem; font-weight: 600;">
+          Invalid credentials. Please enter the fixed assignment staff credentials.
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="loginInputUser">Username</label>
+          <input type="text" id="loginInputUser" class="glow-input" value="sta001" placeholder="sta001">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="loginInputPass">Password</label>
+          <div style="position: relative;">
+            <input type="password" id="loginInputPass" class="glow-input" value="givemethekeys123" placeholder="givemethekeys123" style="padding-right: 2.75rem;">
+            <button type="button" onclick="togglePasswordMask()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted);">👁️</button>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">Staff default: <code>sta001</code> / <code>givemethekeys123</code></p>
+        </div>
+      </div>
+      <div class="modal-sheet-footer">
+        <button class="btn-ghost" onclick="closeLoginSheet()">Cancel</button>
+        <button class="btn-action" onclick="performStaffLogin()">Authenticate →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: APPLICATION LOGIC & CAR ANIMATIONS -->
   <script>
-    // System Fleet Data (Matching SQL Database Starter Fleet)
-    const fleet = [
+    // System Fleet Data matching SQL Database Seeds
+    const fleetDb = [
       { id: 1, reg: "WAC-001", type: "CityCar", fuel: "Petrol", dailyRate: 25.00, isRented: false },
       { id: 2, reg: "WAC-002", type: "CityCar", fuel: "Diesel", dailyRate: 25.00, isRented: false },
       { id: 3, reg: "WAC-003", type: "FamilyCar", fuel: "Petrol", dailyRate: 25.00, isRented: false },
@@ -605,304 +1611,449 @@
     ];
 
     // Historical Bookings
-    const bookings = [];
-    let nextBookingId = 1001;
-    let isAuthenticated = true; // Started authenticated for preview convenience
+    const bookingsHistory = [];
+    let bookingCounter = 1001;
+    let isStaffAuthenticated = true;
 
-    // Rates according to Assignment Rubric & Specification
-    const rates = {
+    // Active Selection State
+    let currentCategory = "SUV";
+    let currentFuel = "Hybrid";
+
+    // Exact Assignment Rates Schedule
+    const tariffRules = {
       baseDaily: 25.00,
-      categorySurcharges: { CityCar: 0.00, FamilyCar: 50.00, SportsCar: 75.00, SUV: 65.00 },
+      catSurcharges: { CityCar: 0.00, FamilyCar: 50.00, SportsCar: 75.00, SUV: 65.00 },
       fuelSurcharges: { Petrol: 0.00, Diesel: 0.00, Hybrid: 30.00, FullElectric: 50.00 },
-      extrasDaily: { mileage: 10.00, breakdown: 2.00 }
+      extrasPerDay: { mileage: 10.00, breakdown: 2.00 }
     };
 
-    // Navigation System
-    function navigate(screenId) {
-      if (!isAuthenticated && screenId !== 'welcome') {
-        openLoginModal();
+    // Animated Car SVGs with rotating alloy wheels
+    function getCarSvg(type, color = "#00F5D4") {
+      if (type === 'SportsCar') {
+        return `
+          <svg width="220" height="75" viewBox="0 0 220 75" fill="none">
+            <!-- Aerodynamic body -->
+            <path d="M15 50 L40 32 L85 26 L150 28 L195 44 L212 50 L212 58 L10 58 Z" fill="${color}" opacity="0.9"/>
+            <path d="M75 29 L125 30 L150 44 L70 44 Z" fill="#0A101D" opacity="0.85"/> <!-- Tinted cockpit -->
+            <!-- Rear Spoiler Wing -->
+            <path d="M5 36 L30 36 L25 46 L8 46 Z" fill="${color}"/>
+            <rect x="18" y="46" width="4" height="6" fill="${color}"/>
+            <!-- Cyan LED Headlight -->
+            <polygon points="205,48 215,50 205,53" fill="#00F5D4" filter="drop-shadow(0 0 8px #00F5D4)"/>
+            <!-- Crimson Taillight -->
+            <rect x="10" y="48" width="6" height="6" fill="#F43F5E" filter="drop-shadow(0 0 8px #F43F5E)"/>
+            <!-- Rotating Alloy Wheels -->
+            <g class="animated-wheel" style="transform-origin: 55px 58px;">
+              <circle cx="55" cy="58" r="14" fill="#080D18" stroke="#1E293B" stroke-width="3"/>
+              <line x1="43" y1="58" x2="67" y2="58" stroke="${color}" stroke-width="2.5"/>
+              <line x1="55" y1="46" x2="55" y2="70" stroke="${color}" stroke-width="2.5"/>
+              <circle cx="55" cy="58" r="5" fill="${color}"/>
+            </g>
+            <g class="animated-wheel" style="transform-origin: 175px 58px;">
+              <circle cx="175" cy="58" r="14" fill="#080D18" stroke="#1E293B" stroke-width="3"/>
+              <line x1="163" y1="58" x2="187" y2="58" stroke="${color}" stroke-width="2.5"/>
+              <line x1="175" y1="46" x2="175" y2="70" stroke="${color}" stroke-width="2.5"/>
+              <circle cx="175" cy="58" r="5" fill="${color}"/>
+            </g>
+          </svg>`;
+      } else if (type === 'SUV') {
+        return `
+          <svg width="220" height="85" viewBox="0 0 220 85" fill="none">
+            <!-- SUV Muscular Body -->
+            <path d="M15 56 L35 24 L135 20 L165 38 L205 52 L205 64 L10 64 Z" fill="${color}" opacity="0.95"/>
+            <!-- Roof Rails -->
+            <rect x="50" y="16" width="70" height="3" fill="#E2E8F0" rx="1.5"/>
+            <!-- Privacy Tint Glass -->
+            <path d="M45 27 L85 25 L85 45 L38 45 Z" fill="#0E1626" opacity="0.85"/>
+            <path d="M92 25 L130 25 L155 42 L92 45 Z" fill="#0E1626" opacity="0.85"/>
+            <!-- LED Matrix Headlight -->
+            <polygon points="198,52 210,54 198,58" fill="#00F5D4" filter="drop-shadow(0 0 10px #00F5D4)"/>
+            <!-- Dual Taillight Bar -->
+            <rect x="10" y="52" width="6" height="8" fill="#F43F5E" filter="drop-shadow(0 0 8px #F43F5E)"/>
+            <!-- Rugged Large Rims -->
+            <g class="animated-wheel" style="transform-origin: 55px 64px;">
+              <circle cx="55" cy="64" r="16" fill="#080D18" stroke="#334155" stroke-width="4"/>
+              <line x1="41" y1="64" x2="69" y2="64" stroke="${color}" stroke-width="3"/>
+              <line x1="55" y1="50" x2="55" y2="78" stroke="${color}" stroke-width="3"/>
+              <line x1="45" y1="54" x2="65" y2="74" stroke="${color}" stroke-width="2"/>
+              <circle cx="55" cy="64" r="6" fill="${color}"/>
+            </g>
+            <g class="animated-wheel" style="transform-origin: 165px 64px;">
+              <circle cx="165" cy="64" r="16" fill="#080D18" stroke="#334155" stroke-width="4"/>
+              <line x1="151" y1="64" x2="179" y2="64" stroke="${color}" stroke-width="3"/>
+              <line x1="165" y1="50" x2="165" y2="78" stroke="${color}" stroke-width="3"/>
+              <line x1="155" y1="54" x2="175" y2="74" stroke="${color}" stroke-width="2"/>
+              <circle cx="165" cy="64" r="6" fill="${color}"/>
+            </g>
+          </svg>`;
+      } else if (type === 'FamilyCar') {
+        return `
+          <svg width="220" height="75" viewBox="0 0 220 75" fill="none">
+            <!-- Estate Body -->
+            <path d="M15 50 L35 28 L145 26 L170 38 L200 48 L200 58 L10 58 Z" fill="${color}" opacity="0.9"/>
+            <path d="M42 32 L88 30 L88 46 L35 46 Z" fill="#0E1626" opacity="0.8"/>
+            <path d="M96 30 L140 30 L160 42 L96 46 Z" fill="#0E1626" opacity="0.8"/>
+            <polygon points="192,48 202,50 192,54" fill="#00F5D4" filter="drop-shadow(0 0 8px #00F5D4)"/>
+            <rect x="10" y="48" width="6" height="6" fill="#F43F5E" filter="drop-shadow(0 0 6px #F43F5E)"/>
+            <g class="animated-wheel" style="transform-origin: 55px 58px;">
+              <circle cx="55" cy="58" r="14" fill="#080D18" stroke="#1E293B" stroke-width="3.5"/>
+              <line x1="43" y1="58" x2="67" y2="58" stroke="${color}" stroke-width="2.5"/>
+              <line x1="55" y1="46" x2="55" y2="70" stroke="${color}" stroke-width="2.5"/>
+              <circle cx="55" cy="58" r="5" fill="${color}"/>
+            </g>
+            <g class="animated-wheel" style="transform-origin: 165px 58px;">
+              <circle cx="165" cy="58" r="14" fill="#080D18" stroke="#1E293B" stroke-width="3.5"/>
+              <line x1="153" y1="58" x2="177" y2="58" stroke="${color}" stroke-width="2.5"/>
+              <line x1="165" y1="46" x2="165" y2="70" stroke="${color}" stroke-width="2.5"/>
+              <circle cx="165" cy="58" r="5" fill="${color}"/>
+            </g>
+          </svg>`;
+      } else {
+        // City Car
+        return `
+          <svg width="200" height="75" viewBox="0 0 200 75" fill="none">
+            <!-- Compact Hatchback -->
+            <path d="M25 50 L40 28 L95 24 L135 34 L165 46 L180 50 L180 58 L20 58 Z" fill="${color}" opacity="0.9"/>
+            <path d="M48 30 L95 28 L95 44 L40 44 Z" fill="#0E1626" opacity="0.8"/>
+            <path d="M102 28 L130 35 L145 44 L102 44 Z" fill="#0E1626" opacity="0.8"/>
+            <polygon points="172,48 182,50 172,54" fill="#00F5D4" filter="drop-shadow(0 0 8px #00F5D4)"/>
+            <rect x="20" y="48" width="6" height="6" fill="#F43F5E" filter="drop-shadow(0 0 6px #F43F5E)"/>
+            <g class="animated-wheel" style="transform-origin: 55px 58px;">
+              <circle cx="55" cy="58" r="13" fill="#080D18" stroke="#1E293B" stroke-width="3"/>
+              <line x1="44" y1="58" x2="66" y2="58" stroke="${color}" stroke-width="2"/>
+              <line x1="55" y1="47" x2="55" y2="69" stroke="${color}" stroke-width="2"/>
+              <circle cx="55" cy="58" r="4" fill="${color}"/>
+            </g>
+            <g class="animated-wheel" style="transform-origin: 145px 58px;">
+              <circle cx="145" cy="58" r="13" fill="#080D18" stroke="#1E293B" stroke-width="3"/>
+              <line x1="134" y1="58" x2="156" y2="58" stroke="${color}" stroke-width="2"/>
+              <line x1="145" y1="47" x2="145" y2="69" stroke="${color}" stroke-width="2"/>
+              <circle cx="145" cy="58" r="4" fill="${color}"/>
+            </g>
+          </svg>`;
+      }
+    }
+
+    // Switch Showcase Car in Highway Hero
+    function changeShowcaseCar(category) {
+      currentCategory = category;
+      const colorMap = {
+        SportsCar: "#F43F5E",
+        SUV: "#00F5D4",
+        FamilyCar: "#00BBF9",
+        CityCar: "#2DD4BF"
+      };
+
+      document.getElementById('carSvgContainer').innerHTML = getCarSvg(category, colorMap[category]);
+
+      // Update buttons active state
+      document.querySelectorAll('.highway-controls ~ div .speed-btn').forEach(btn => {
+        if (btn.innerText.includes(category.replace('Car', ''))) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // Highway Speed Controller
+    function setHighwaySpeed(duration, btn) {
+      document.getElementById('roadLanes').style.animationDuration = `${duration}s`;
+      document.getElementById('streetPoles').style.animationDuration = `${duration * 1.5}s`;
+
+      document.querySelectorAll('.highway-controls .speed-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // Navigation View Switcher
+    function showScreen(screenName) {
+      if (!isStaffAuthenticated && screenName !== 'welcome') {
+        openLoginSheet();
         return;
       }
 
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-screen').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
-      const target = document.getElementById(`screen-${screenId}`);
+      const target = document.getElementById(`view-${screenName}`);
       if (target) target.classList.add('active');
 
-      if (screenId === 'dashboard') {
-        document.getElementById('btnNavDash').classList.add('active');
-        updateDashboardKPIs();
-      } else if (screenId === 'new-booking') {
-        document.getElementById('btnNavNew').classList.add('active');
-        recalculateQuote();
-        updateVehicleAllocation();
-        validateForm();
-      } else if (screenId === 'rented-cars') {
-        document.getElementById('btnNavRented').classList.add('active');
-        renderFleetTable();
-      } else if (screenId === 'booking-history') {
-        document.getElementById('btnNavHistory').classList.add('active');
-        renderHistoryTable();
+      if (screenName === 'dashboard') {
+        document.getElementById('navBtnDash').classList.add('active');
+        refreshKpiStats();
+        changeShowcaseCar(currentCategory);
+      } else if (screenName === 'new-booking') {
+        document.getElementById('navBtnNew').classList.add('active');
+        updatePricingCalculation();
+        runValidation();
+      } else if (screenName === 'rented-cars') {
+        document.getElementById('navBtnRented').classList.add('active');
+        drawFleetTable();
+      } else if (screenName === 'booking-history') {
+        document.getElementById('navBtnHistory').classList.add('active');
+        drawHistoryTable();
       }
     }
 
-    // Pricing Calculation Engine (Pure Logic)
-    function calculatePricing(days, category, fuel, hasMileage, hasBreakdown) {
-      const baseRental = days * rates.baseDaily;
-      const catSurcharge = rates.categorySurcharges[category] || 0.00;
-      const fuelSurcharge = rates.fuelSurcharges[fuel] || 0.00;
-      const dailyExtras = (hasMileage ? rates.extrasDaily.mileage : 0.00) +
-                          (hasBreakdown ? rates.extrasDaily.breakdown : 0.00);
-      const extrasTotal = dailyExtras * days;
-      const total = baseRental + catSurcharge + fuelSurcharge + extrasTotal;
+    // Pure Decimal Pricing Calculation Engine
+    function calculateRentalPricing(days, category, fuel, hasMileage, hasBreakdown) {
+      const baseCost = days * tariffRules.baseDaily;
+      const catFee = tariffRules.catSurcharges[category] || 0.00;
+      const fuelFee = tariffRules.fuelSurcharges[fuel] || 0.00;
+      const dailyExtras = (hasMileage ? tariffRules.extrasPerDay.mileage : 0.00) +
+                          (hasBreakdown ? tariffRules.extrasPerDay.breakdown : 0.00);
+      const totalExtras = dailyExtras * days;
+      const grandTotal = baseCost + catFee + fuelFee + totalExtras;
 
       return {
-        baseRental,
-        catSurcharge,
-        fuelSurcharge,
+        baseCost,
+        catFee,
+        fuelFee,
         dailyExtras,
-        extrasTotal,
-        total
+        totalExtras,
+        grandTotal
       };
     }
 
-    // Live Quotation Refresh
-    function recalculateQuote() {
-      const days = parseInt(document.getElementById('inpDays').value) || 0;
-      const category = document.getElementById('selCategory').value;
-      const fuel = document.getElementById('selFuel').value;
-      const hasMileage = document.getElementById('chkMileage').checked;
-      const hasBreakdown = document.getElementById('chkBreakdown').checked;
+    // Update Live Quotation Sidebar
+    function updatePricingCalculation() {
+      const days = parseInt(document.getElementById('inpDaysVal').value) || 0;
+      const hasMileage = document.getElementById('chkExtraMileage').checked;
+      const hasBreakdown = document.getElementById('chkExtraBreakdown').checked;
 
-      const p = calculatePricing(days, category, fuel, hasMileage, hasBreakdown);
+      const p = calculateRentalPricing(days, currentCategory, currentFuel, hasMileage, hasBreakdown);
 
-      document.getElementById('qDays').innerText = days;
-      document.getElementById('qBase').innerText = `£${p.baseRental.toFixed(2)}`;
-      document.getElementById('qCatName').innerText = category.replace('Car', ' Car');
-      document.getElementById('qCatSurcharge').innerText = `£${p.catSurcharge.toFixed(2)}`;
-      document.getElementById('qFuelName').innerText = fuel === 'FullElectric' ? 'Full Electric' : fuel;
-      document.getElementById('qFuelSurcharge').innerText = `£${p.fuelSurcharge.toFixed(2)}`;
-      document.getElementById('qExtrasRate').innerText = `£${p.dailyExtras.toFixed(2)}`;
-      document.getElementById('qExtrasDays').innerText = days;
-      document.getElementById('qExtrasTotal').innerText = `£${p.extrasTotal.toFixed(2)}`;
-      document.getElementById('qTotal').innerText = `£${p.total.toFixed(2)}`;
-    }
+      document.getElementById('lineDaysCount').innerText = days;
+      document.getElementById('lineBaseTotal').innerText = `£${p.baseCost.toFixed(2)}`;
+      document.getElementById('lineCatName').innerText = currentCategory.replace('Car', ' Car');
+      document.getElementById('lineCatSurcharge').innerText = `£${p.catFee.toFixed(2)}`;
+      document.getElementById('lineFuelName').innerText = currentFuel === 'FullElectric' ? 'Electric' : currentFuel;
+      document.getElementById('lineFuelSurcharge').innerText = `£${p.fuelFee.toFixed(2)}`;
+      document.getElementById('lineExtrasRate').innerText = `£${p.dailyExtras.toFixed(2)}`;
+      document.getElementById('lineExtrasDays').innerText = days;
+      document.getElementById('lineExtrasTotal').innerText = `£${p.totalExtras.toFixed(2)}`;
+      document.getElementById('lineGrandTotal').innerText = `£${p.grandTotal.toFixed(2)}`;
 
-    // Vehicle Allocation Lookup
-    function updateVehicleAllocation() {
-      const category = document.getElementById('selCategory').value;
-      const fuel = document.getElementById('selFuel').value;
-      const matchingCar = fleet.find(c => c.type === category && c.fuel === fuel && !c.isRented);
+      // Allocation lookup
+      const car = fleetDb.find(c => c.type === currentCategory && c.fuel === currentFuel && !c.isRented);
+      const allocText = document.getElementById('allocSummaryText');
+      const btnLaunch = document.getElementById('btnLaunchReview');
 
-      const allocEl = document.getElementById('allocationText');
-      const btnReview = document.getElementById('btnReview');
-
-      if (matchingCar) {
-        allocEl.innerHTML = `Allocated Vehicle: <strong>[${matchingCar.reg}]</strong> ${matchingCar.type} (${matchingCar.fuel})`;
-        allocEl.style.color = 'var(--navy-900)';
-        btnReview.disabled = false;
+      if (car) {
+        allocText.innerHTML = `<strong>[${car.reg}]</strong> ${car.type} (${car.fuel})`;
+        allocText.style.color = "white";
+        btnLaunch.disabled = false;
       } else {
-        allocEl.innerHTML = `<span style="color: var(--danger-600); font-weight: 700;">No available ${category} (${fuel}) in fleet.</span>`;
-        btnReview.disabled = true;
+        allocText.innerHTML = `<span style="color: var(--coral-red);">No available ${currentCategory} (${currentFuel})</span>`;
+        btnLaunch.disabled = true;
       }
     }
 
-    // Form Validation
-    function validateForm() {
-      let isValid = true;
+    // Category Selector
+    function selectCategory(category) {
+      currentCategory = category;
+      document.querySelectorAll('.vehicle-model-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById(`card${category}`).classList.add('selected');
+      updatePricingCalculation();
+    }
 
-      const fName = document.getElementById('inpFirstName').value.trim();
-      const sName = document.getElementById('inpSurname').value.trim();
-      const address = document.getElementById('inpAddress').value.trim();
+    // Fuel Selector
+    function selectFuel(fuel) {
+      currentFuel = fuel;
+      document.querySelectorAll('.fuel-chip').forEach(c => c.classList.remove('selected'));
+      document.getElementById(`chip${fuel}`).classList.add('selected');
+      updatePricingCalculation();
+    }
+
+    // Form Validation Logic
+    function runValidation() {
+      let valid = true;
+      const fName = document.getElementById('inpFName').value.trim();
+      const sName = document.getElementById('inpSName').value.trim();
+      const addr = document.getElementById('inpAddress').value.trim();
       const age = parseInt(document.getElementById('inpAge').value) || 0;
-      const license = document.getElementById('selLicense').value;
-      const days = parseInt(document.getElementById('inpDays').value) || 0;
+      const lic = document.getElementById('selLic').value;
+      const days = parseInt(document.getElementById('inpDaysVal').value) || 0;
 
       // First Name
-      const errFName = document.getElementById('errFirstName');
+      const errFName = document.getElementById('errFName');
       if (!fName || fName.length > 50) {
-        document.getElementById('inpFirstName').classList.add('is-invalid');
+        document.getElementById('inpFName').classList.add('is-invalid');
         errFName.style.display = 'block';
-        isValid = false;
+        valid = false;
       } else {
-        document.getElementById('inpFirstName').classList.remove('is-invalid');
+        document.getElementById('inpFName').classList.remove('is-invalid');
         errFName.style.display = 'none';
       }
 
-      // Surname (Mandatory)
-      const errSName = document.getElementById('errSurname');
+      // Surname
+      const errSName = document.getElementById('errSName');
       if (!sName || sName.length > 50) {
-        document.getElementById('inpSurname').classList.add('is-invalid');
+        document.getElementById('inpSName').classList.add('is-invalid');
         errSName.style.display = 'block';
-        isValid = false;
+        valid = false;
       } else {
-        document.getElementById('inpSurname').classList.remove('is-invalid');
+        document.getElementById('inpSName').classList.remove('is-invalid');
         errSName.style.display = 'none';
       }
 
       // Address
       const errAddr = document.getElementById('errAddress');
-      if (!address || address.length > 150) {
+      if (!addr || addr.length > 150) {
         document.getElementById('inpAddress').classList.add('is-invalid');
         errAddr.style.display = 'block';
-        isValid = false;
+        valid = false;
       } else {
         document.getElementById('inpAddress').classList.remove('is-invalid');
         errAddr.style.display = 'none';
       }
 
-      // Age (Min 18)
+      // Age
       const errAge = document.getElementById('errAge');
       if (age < 18) {
         document.getElementById('inpAge').classList.add('is-invalid');
         errAge.style.display = 'block';
-        isValid = false;
+        valid = false;
       } else {
         document.getElementById('inpAge').classList.remove('is-invalid');
         errAge.style.display = 'none';
       }
 
-      // Driving Licence
-      const errLic = document.getElementById('errLicense');
-      if (license !== 'yes') {
-        document.getElementById('selLicense').classList.add('is-invalid');
+      // Licence
+      const errLic = document.getElementById('errLic');
+      if (lic !== 'yes') {
+        document.getElementById('selLic').classList.add('is-invalid');
         errLic.style.display = 'block';
-        isValid = false;
+        valid = false;
       } else {
-        document.getElementById('selLicense').classList.remove('is-invalid');
+        document.getElementById('selLic').classList.remove('is-invalid');
         errLic.style.display = 'none';
       }
 
-      // Rental Days (1 to 28)
+      // Days
       const errDays = document.getElementById('errDays');
       if (days < 1 || days > 28) {
-        document.getElementById('inpDays').classList.add('is-invalid');
+        document.getElementById('inpDaysVal').classList.add('is-invalid');
         errDays.style.display = 'block';
-        isValid = false;
+        valid = false;
       } else {
-        document.getElementById('inpDays').classList.remove('is-invalid');
+        document.getElementById('inpDaysVal').classList.remove('is-invalid');
         errDays.style.display = 'none';
       }
 
-      return isValid;
+      return valid;
     }
 
-    // Modal Handlers
-    function openReviewModal() {
-      if (!validateForm()) return;
+    // Modal Review Sheet Handlers
+    function openReviewSheet() {
+      if (!runValidation()) return;
 
-      const fName = document.getElementById('inpFirstName').value.trim();
-      const sName = document.getElementById('inpSurname').value.trim();
-      const address = document.getElementById('inpAddress').value.trim();
+      const fName = document.getElementById('inpFName').value.trim();
+      const sName = document.getElementById('inpSName').value.trim();
+      const addr = document.getElementById('inpAddress').value.trim();
       const age = document.getElementById('inpAge').value;
-      const days = document.getElementById('inpDays').value;
-      const category = document.getElementById('selCategory').value;
-      const fuel = document.getElementById('selFuel').value;
-      const matchingCar = fleet.find(c => c.type === category && c.fuel === fuel && !c.isRented);
+      const days = parseInt(document.getElementById('inpDaysVal').value);
+      const hasMileage = document.getElementById('chkExtraMileage').checked;
+      const hasBreakdown = document.getElementById('chkExtraBreakdown').checked;
 
-      if (!matchingCar) return;
+      const car = fleetDb.find(c => c.type === currentCategory && c.fuel === currentFuel && !c.isRented);
+      if (!car) return;
 
-      const hasMileage = document.getElementById('chkMileage').checked;
-      const hasBreakdown = document.getElementById('chkBreakdown').checked;
-      const p = calculatePricing(parseInt(days), category, fuel, hasMileage, hasBreakdown);
+      const p = calculateRentalPricing(days, currentCategory, currentFuel, hasMileage, hasBreakdown);
 
-      document.getElementById('revCustName').innerText = `${fName} ${sName}`;
-      document.getElementById('revCustAge').innerText = age;
-      document.getElementById('revCustAddress').innerText = address;
-      document.getElementById('revCar').innerText = `${matchingCar.type} [${matchingCar.reg}] (${matchingCar.fuel})`;
-      document.getElementById('revDays').innerText = days;
+      document.getElementById('revModalCustName').innerText = `${fName} ${sName}`;
+      document.getElementById('revModalCustAge').innerText = age;
+      document.getElementById('revModalCustAddr').innerText = addr;
+      document.getElementById('revModalCar').innerText = `${car.type} [${car.reg}] (${car.fuel})`;
+      document.getElementById('revModalDays').innerText = days;
 
       const extras = [];
       if (hasMileage) extras.push("Unlimited Mileage (£10/day)");
       if (hasBreakdown) extras.push("Breakdown Cover (£2/day)");
-      document.getElementById('revExtras').innerText = extras.length > 0 ? extras.join(", ") : "None";
+      document.getElementById('revModalExtras').innerText = extras.length > 0 ? extras.join(", ") : "None";
+      document.getElementById('revModalTotal').innerText = `£${p.grandTotal.toFixed(2)}`;
 
-      document.getElementById('revTotal').innerText = `£${p.total.toFixed(2)}`;
-
-      document.getElementById('modalReview').classList.add('active');
+      document.getElementById('sheetReview').classList.add('open');
     }
 
-    function closeReviewModal() {
-      document.getElementById('modalReview').classList.remove('active');
+    function closeReviewSheet() {
+      document.getElementById('sheetReview').classList.remove('open');
     }
 
-    function confirmAndSaveBooking() {
-      const category = document.getElementById('selCategory').value;
-      const fuel = document.getElementById('selFuel').value;
-      const matchingCar = fleet.find(c => c.type === category && c.fuel === fuel && !c.isRented);
-
-      if (!matchingCar) {
+    // Atomic Booking Persistence
+    function commitBookingNow() {
+      const car = fleetDb.find(c => c.type === currentCategory && c.fuel === currentFuel && !c.isRented);
+      if (!car) {
         alert("Vehicle is no longer available.");
         return;
       }
 
-      // Mark vehicle as rented atomically
-      matchingCar.isRented = true;
+      car.isRented = true;
 
-      const fName = document.getElementById('inpFirstName').value.trim();
-      const sName = document.getElementById('inpSurname').value.trim();
-      const address = document.getElementById('inpAddress').value.trim();
-      const days = parseInt(document.getElementById('inpDays').value);
-      const hasMileage = document.getElementById('chkMileage').checked;
-      const hasBreakdown = document.getElementById('chkBreakdown').checked;
-      const p = calculatePricing(days, category, fuel, hasMileage, hasBreakdown);
+      const fName = document.getElementById('inpFName').value.trim();
+      const sName = document.getElementById('inpSName').value.trim();
+      const addr = document.getElementById('inpAddress').value.trim();
+      const days = parseInt(document.getElementById('inpDaysVal').value);
+      const hasMileage = document.getElementById('chkExtraMileage').checked;
+      const hasBreakdown = document.getElementById('chkExtraBreakdown').checked;
+      const p = calculateRentalPricing(days, currentCategory, currentFuel, hasMileage, hasBreakdown);
 
-      const newBooking = {
-        id: `BK-${nextBookingId++}`,
-        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        customerName: `${fName} ${sName}`,
-        customerAddress: address,
-        carReg: matchingCar.reg,
-        carType: matchingCar.type,
-        carFuel: matchingCar.fuel,
+      const bookingRec = {
+        id: `BK-${bookingCounter++}`,
+        time: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        clientName: `${fName} ${sName}`,
+        clientAddr: addr,
+        reg: car.reg,
+        type: car.type,
+        fuel: car.fuel,
         days: days,
         hasMileage: hasMileage,
         hasBreakdown: hasBreakdown,
-        totalCost: p.total
+        totalPaid: p.grandTotal
       };
 
-      bookings.unshift(newBooking);
+      bookingsHistory.unshift(bookingRec);
 
-      closeReviewModal();
+      closeReviewSheet();
 
-      // Show receipt modal
-      document.getElementById('recId').innerText = newBooking.id;
-      document.getElementById('recReg').innerText = newBooking.carReg;
-      document.getElementById('recCustomer').innerText = newBooking.customerName;
-      document.getElementById('recDays').innerText = `${days} days`;
-      document.getElementById('recTotal').innerText = `£${p.total.toFixed(2)}`;
-      document.getElementById('modalReceipt').classList.add('active');
+      // Show Voucher
+      document.getElementById('recVoucherId').innerText = bookingRec.id;
+      document.getElementById('recVoucherReg').innerText = bookingRec.reg;
+      document.getElementById('recVoucherClient').innerText = bookingRec.clientName;
+      document.getElementById('recVoucherDays').innerText = `${days} Days`;
+      document.getElementById('recVoucherPrice').innerText = `£${p.grandTotal.toFixed(2)}`;
 
-      updateDashboardKPIs();
+      document.getElementById('sheetReceipt').classList.add('open');
+
+      refreshKpiStats();
     }
 
-    function closeReceiptModal() {
-      document.getElementById('modalReceipt').classList.remove('active');
+    function closeReceiptSheet() {
+      document.getElementById('sheetReceipt').classList.remove('open');
     }
 
-    // Dashboard KPIs
-    function updateDashboardKPIs() {
-      const total = fleet.length;
-      const rented = fleet.filter(c => c.isRented).length;
+    // KPI Refresh
+    function refreshKpiStats() {
+      const total = fleetDb.length;
+      const rented = fleetDb.filter(c => c.isRented).length;
       const available = total - rented;
 
-      document.getElementById('kpiTotal').innerText = total;
-      document.getElementById('kpiAvailable').innerText = available;
-      document.getElementById('kpiRented').innerText = rented;
-      document.getElementById('kpiBookings').innerText = bookings.length;
+      document.getElementById('kpiFleetTotal').innerText = total;
+      document.getElementById('kpiAvailableCount').innerText = available;
+      document.getElementById('kpiRentedCount').innerText = rented;
+      document.getElementById('kpiBookingsCount').innerText = bookingsHistory.length;
     }
 
-    // Render Fleet Table
-    function renderFleetTable() {
-      const q = (document.getElementById('inpFilterCars').value || '').toLowerCase();
-      const tbody = document.getElementById('fleetTableBody');
+    // Fleet Table Rendering
+    function drawFleetTable() {
+      const q = (document.getElementById('filterFleetInp').value || '').toLowerCase();
+      const tbody = document.getElementById('fleetTableContent');
       tbody.innerHTML = '';
 
-      const filtered = fleet.filter(c => c.reg.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
+      const filtered = fleetDb.filter(c => c.reg.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--slate-500); padding: 2rem;">No matching vehicles found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No vehicles found matching query.</td></tr>`;
         return;
       }
 
@@ -912,16 +2063,16 @@
           <td><strong>${c.reg}</strong></td>
           <td>${c.type.replace('Car', ' Car')}</td>
           <td>${c.fuel}</td>
-          <td>£${c.dailyRate.toFixed(2)}/day</td>
+          <td>£${c.dailyRate.toFixed(2)} / day</td>
           <td>
-            <span class="badge ${c.isRented ? 'badge-danger' : 'badge-green'}">
+            <span class="badge-status ${c.isRented ? 'badge-rented' : 'badge-avail'}">
               ${c.isRented ? 'RENTED' : 'AVAILABLE'}
             </span>
           </td>
           <td>
             ${c.isRented ?
-              `<button class="btn btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="returnVehicle('${c.reg}')">Return Vehicle</button>` :
-              `<button class="btn btn-primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="bookThisVehicle('${c.type}', '${c.fuel}')">Book</button>`
+              `<button class="btn-ghost" style="padding: 0.3rem 0.75rem; font-size: 0.8rem; border-color: var(--teal-bright); color: var(--teal-bright);" onclick="checkInCar('${c.reg}')">Return Vehicle</button>` :
+              `<button class="btn-action" style="padding: 0.3rem 0.85rem; font-size: 0.8rem;" onclick="quickBookCar('${c.type}', '${c.fuel}')">Book</button>`
             }
           </td>
         `;
@@ -929,108 +2080,109 @@
       });
     }
 
-    function returnVehicle(reg) {
-      const car = fleet.find(c => c.reg === reg);
+    function checkInCar(reg) {
+      const car = fleetDb.find(c => c.reg === reg);
       if (car) {
         car.isRented = false;
-        renderFleetTable();
-        updateDashboardKPIs();
+        drawFleetTable();
+        refreshKpiStats();
       }
     }
 
-    function bookThisVehicle(type, fuel) {
-      navigate('new-booking');
-      document.getElementById('selCategory').value = type;
-      document.getElementById('selFuel').value = fuel;
-      recalculateQuote();
-      updateVehicleAllocation();
+    function quickBookCar(type, fuel) {
+      showScreen('new-booking');
+      selectCategory(type);
+      selectFuel(fuel);
     }
 
-    // Render History Table
-    function renderHistoryTable() {
-      const tbody = document.getElementById('historyTableBody');
+    // History Table Rendering
+    function drawHistoryTable() {
+      const tbody = document.getElementById('historyTableContent');
       tbody.innerHTML = '';
 
-      if (bookings.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--slate-500); padding: 2.5rem;">No historical bookings found. Make a reservation to view records here.</td></tr>`;
+      if (bookingsHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">No historical bookings found. Finalize a booking to populate this ledger.</td></tr>`;
         return;
       }
 
-      bookings.forEach(b => {
+      bookingsHistory.forEach(b => {
         const extras = [];
         if (b.hasMileage) extras.push("Unlimited Mileage");
         if (b.hasBreakdown) extras.push("Breakdown Cover");
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${b.id}</strong></td>
-          <td>${b.date}</td>
-          <td>${b.customerName}</td>
-          <td><span class="badge badge-teal">${b.carReg}</span> (${b.carType})</td>
-          <td>${b.days} days</td>
-          <td>${extras.length > 0 ? extras.join(", ") : "None"}</td>
-          <td><strong style="color: var(--teal-600);">£${b.totalCost.toFixed(2)}</strong></td>
-          <td><button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="alert('Customer: ${b.customerName}\\nAddress: ${b.customerAddress}\\nAllocated: ${b.carReg}\\nStored Total: £${b.totalCost.toFixed(2)}')">View</button></td>
+          <td><span class="neon-pill">${b.id}</span></td>
+          <td>${b.time}</td>
+          <td><strong>${b.clientName}</strong></td>
+          <td><span style="color: var(--teal-bright); font-weight: 700;">${b.reg}</span> (${b.type})</td>
+          <td>${b.days} Days</td>
+          <td>${extras.length > 0 ? extras.join(', ') : 'None'}</td>
+          <td><strong style="color: var(--teal-neon); font-family: 'JetBrains Mono';">£${b.totalPaid.toFixed(2)}</strong></td>
+          <td>
+            <button class="btn-ghost" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="alert('CLIENT VOUCHER\\n\\nID: ${b.id}\\nClient: ${b.clientName}\\nAddress: ${b.clientAddr}\\nAllocated: ${b.reg}\\nDuration: ${b.days} Days\\nStored Total: £${b.totalPaid.toFixed(2)}')">Inspect</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Benchmark Pre-fill Helper
-    function loadBenchmark() {
-      document.getElementById('inpFirstName').value = "John";
-      document.getElementById('inpSurname').value = "Smith";
+    // Benchmark Pre-fills
+    function loadBenchmarkValues() {
+      document.getElementById('inpFName').value = "John";
+      document.getElementById('inpSName').value = "Smith";
       document.getElementById('inpAddress').value = "14 High Street, Sunderland, SR1 3PZ";
       document.getElementById('inpAge').value = "28";
-      document.getElementById('selLicense').value = "yes";
-      document.getElementById('inpDays').value = "3";
-      document.getElementById('selCategory').value = "SUV";
-      document.getElementById('selFuel').value = "Hybrid";
-      document.getElementById('chkMileage').checked = true;
-      document.getElementById('chkBreakdown').checked = true;
+      document.getElementById('selLic').value = "yes";
+      document.getElementById('inpDaysVal').value = "3";
 
-      recalculateQuote();
-      updateVehicleAllocation();
-      validateForm();
+      selectCategory("SUV");
+      selectFuel("Hybrid");
+
+      document.getElementById('chkExtraMileage').checked = true;
+      document.getElementById('chkExtraBreakdown').checked = true;
+
+      updatePricingCalculation();
+      runValidation();
     }
 
-    function loadBenchmarkAndOpen() {
-      navigate('new-booking');
-      loadBenchmark();
+    function loadBenchmarkAndJump() {
+      showScreen('new-booking');
+      loadBenchmarkValues();
     }
 
-    // Authentication
-    function openLoginModal() { document.getElementById('modalLogin').classList.add('active'); }
-    function closeLoginModal() { document.getElementById('modalLogin').classList.remove('active'); }
-    function togglePassVisibility() {
-      const p = document.getElementById('loginPass');
+    // Authentication Handlers
+    function openLoginSheet() { document.getElementById('sheetLogin').classList.add('open'); }
+    function closeLoginSheet() { document.getElementById('sheetLogin').classList.remove('open'); }
+    function togglePasswordMask() {
+      const p = document.getElementById('loginInputPass');
       p.type = p.type === 'password' ? 'text' : 'password';
     }
-    function submitLogin() {
-      const u = document.getElementById('loginUser').value.trim();
-      const p = document.getElementById('loginPass').value.trim();
+    function performStaffLogin() {
+      const u = document.getElementById('loginInputUser').value.trim();
+      const p = document.getElementById('loginInputPass').value.trim();
 
       if (u === 'sta001' && p === 'givemethekeys123') {
-        isAuthenticated = true;
-        closeLoginModal();
-        document.getElementById('navLinks').style.display = 'flex';
-        navigate('dashboard');
+        isStaffAuthenticated = true;
+        closeLoginSheet();
+        document.getElementById('navLinksBar').style.display = 'flex';
+        showScreen('dashboard');
       } else {
-        document.getElementById('loginAlert').style.display = 'block';
+        document.getElementById('loginFeedbackAlert').style.display = 'block';
       }
     }
-    function logout() {
-      isAuthenticated = false;
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById('screen-welcome').classList.add('active');
-      document.getElementById('navLinks').style.display = 'none';
+    function logoutStaff() {
+      isStaffAuthenticated = false;
+      document.querySelectorAll('.view-screen').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-welcome').classList.add('active');
+      document.getElementById('navLinksBar').style.display = 'none';
     }
 
-    // Initialize on page load
+    // Initialize application on page load
     window.onload = function() {
-      recalculateQuote();
-      updateVehicleAllocation();
-      updateDashboardKPIs();
+      changeShowcaseCar('SUV');
+      updatePricingCalculation();
+      refreshKpiStats();
     };
   </script>
 </body>
