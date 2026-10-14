@@ -1076,12 +1076,12 @@
 
         <!-- Car Switcher Bar right under highway -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;">
-          <div style="display: flex; gap: 0.6rem; align-items: center;">
+          <div style="display: flex; gap: 0.6rem; align-items: center;" id="showcaseButtonsWrap">
             <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Showcase Vehicle:</span>
-            <button class="speed-btn" onclick="changeShowcaseCar('SportsCar')">🏎️ Sports Car</button>
-            <button class="speed-btn active" onclick="changeShowcaseCar('SUV')">🚙 Luxury SUV</button>
-            <button class="speed-btn" onclick="changeShowcaseCar('FamilyCar')">🚗 Family Car</button>
-            <button class="speed-btn" onclick="changeShowcaseCar('CityCar')">🚘 City Car</button>
+            <button class="speed-btn showcase-car-btn" id="showcaseBtnSportsCar" onclick="changeShowcaseCar('SportsCar')">🏎️ Sports Car</button>
+            <button class="speed-btn showcase-car-btn active" id="showcaseBtnSUV" onclick="changeShowcaseCar('SUV')">🚙 Luxury SUV</button>
+            <button class="speed-btn showcase-car-btn" id="showcaseBtnFamilyCar" onclick="changeShowcaseCar('FamilyCar')">🚗 Family Car</button>
+            <button class="speed-btn showcase-car-btn" id="showcaseBtnCityCar" onclick="changeShowcaseCar('CityCar')">🚘 City Car</button>
           </div>
           <button class="btn-action" style="padding: 0.6rem 1.4rem; font-size: 0.9rem;" onclick="showScreen('new-booking')">
             ➕ Register New Booking
@@ -1736,24 +1736,7 @@
 
     // Switch Showcase Car in Highway Hero
     function changeShowcaseCar(category) {
-      currentCategory = category;
-      const colorMap = {
-        SportsCar: "#F43F5E",
-        SUV: "#00F5D4",
-        FamilyCar: "#00BBF9",
-        CityCar: "#2DD4BF"
-      };
-
-      document.getElementById('carSvgContainer').innerHTML = getCarSvg(category, colorMap[category]);
-
-      // Update buttons active state
-      document.querySelectorAll('.highway-controls ~ div .speed-btn').forEach(btn => {
-        if (btn.innerText.includes(category.replace('Car', ''))) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
+      selectCategory(category);
     }
 
     // Highway Speed Controller
@@ -1852,8 +1835,29 @@
     // Category Selector
     function selectCategory(category) {
       currentCategory = category;
+      
+      // Update New Booking vehicle model cards
       document.querySelectorAll('.vehicle-model-card').forEach(c => c.classList.remove('selected'));
-      document.getElementById(`card${category}`).classList.add('selected');
+      const card = document.getElementById(`card${category}`);
+      if (card) card.classList.add('selected');
+
+      // Update Showcase buttons active highlight
+      document.querySelectorAll('.showcase-car-btn').forEach(btn => btn.classList.remove('active'));
+      const activeShowcaseBtn = document.getElementById(`showcaseBtn${category}`);
+      if (activeShowcaseBtn) activeShowcaseBtn.classList.add('active');
+
+      // Update Highway Hero animated car SVG
+      const colorMap = {
+        SportsCar: "#F43F5E",
+        SUV: "#00F5D4",
+        FamilyCar: "#00BBF9",
+        CityCar: "#2DD4BF"
+      };
+      const svgBox = document.getElementById('carSvgContainer');
+      if (svgBox) {
+        svgBox.innerHTML = getCarSvg(category, colorMap[category]);
+      }
+
       updatePricingCalculation();
     }
 
