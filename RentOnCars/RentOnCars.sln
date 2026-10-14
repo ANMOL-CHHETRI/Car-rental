@@ -1,9 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentOnCars", "RentOnCars\RentOnCars.csproj", "{AB7D3882-B972-4791-98EB-6777523CF700}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentOnCars.Tests", "RentOnCars.Tests\RentOnCars.Tests.csproj", "{C7E3A941-8F32-4E9A-B012-3D569E981234}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{AB7D3882-B972-4791-98EB-6777523CF700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB7D3882-B972-4791-98EB-6777523CF700}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB7D3882-B972-4791-98EB-6777523CF700}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7E3A941-8F32-4E9A-B012-3D569E981234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7E3A941-8F32-4E9A-B012-3D569E981234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7E3A941-8F32-4E9A-B012-3D569E981234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7E3A941-8F32-4E9A-B012-3D569E981234}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

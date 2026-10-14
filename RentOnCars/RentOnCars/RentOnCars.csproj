@@ -76,6 +76,16 @@
     <Compile Include="Models\BookingModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repos\Booking_repos.cs" />
+    <Compile Include="BookingReviewDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BookingReviewDialog.Designer.cs">
+      <DependentUpon>BookingReviewDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Services\PricingCalculator.cs" />
+    <Compile Include="Services\BookingValidator.cs" />
+    <Compile Include="Services\LoginAuditLogger.cs" />
+    <Compile Include="UI\Theme.cs" />
     <Compile Include="Welcome_page.cs">
       <SubType>Form</SubType>
     </Compile>

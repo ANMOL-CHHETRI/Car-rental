@@ -1,13 +1,57 @@
-RentOnCars - Automatic Database Setup
+========================================================================
+           WeAreCars (RentOnCars) - Database Setup & Operational Guide
+                   University of Sunderland - CET131
+========================================================================
 
-No manual SQL setup is required.
+1. AUTOMATIC LOCALDB INITIALIZATION (DEFAULT)
+------------------------------------------------------------------------
+The application is pre-configured to automatically manage its database:
+• Database: RentOnCarsDB
+• Default Server: (localdb)\MSSQLLocalDB
+• Connection String: Defined in RentOnCars.exe.config / App.config.
 
+When running the application:
 1. Open RentOnCars.sln in Visual Studio.
-2. Press Start / F5.
-3. On the first run, the application automatically creates RentOnCarsDB, its tables, and the starter cars.
-4. The application then opens normally.
-5. Staff login: Username = sta001 | Password = givemethekeys123
+2. Select Debug or Release configuration and press Start (F5).
+3. DatabaseInitializer verifies if SqlLocalDB.exe is installed, creates 
+   and starts the 'MSSQLLocalDB' instance automatically if needed, creates 
+   the 'RentOnCarsDB' database catalog, ensures the required tables exist,
+   and non-destructively seeds the starter fleet (WAC-001 to WAC-010).
+4. Existing bookings and vehicle records are strictly preserved and will 
+   not be dropped or duplicated on repeated runs.
 
-The database initialization is built into the application. You do not need to open SQL Server Management Studio, run dbo.database.sql, create tables manually, or edit the connection string.
+2. MANUAL DATABASE SETUP (OPTIONAL / SQL SERVER EXPRESS / SSMS)
+------------------------------------------------------------------------
+If you prefer running the SQL script manually or connecting to a custom 
+SQL Server Express / Developer instance:
+1. Open SQL Server Management Studio (SSMS) or Azure Data Studio.
+2. Connect to your SQL Server instance (e.g. (localdb)\MSSQLLocalDB or .\SQLEXPRESS).
+3. Open and execute the script: dbo.database.sql
+   (The script is safe and idempotent; it will not drop existing tables).
+4. If your SQL instance name is different, update the connection string 
+   in RentOnCars/App.config under the 'RentOnCarsDb' key.
 
-Requirement: Visual Studio with SQL Server LocalDB installed (normally included with the Visual Studio SQL/data tools).
+3. TROUBLESHOOTING & OFFLINE RESILIENCE
+------------------------------------------------------------------------
+• If SQL Server LocalDB is not installed:
+  1. Open Visual Studio Installer -> Modify -> Workloads.
+  2. Under '.NET desktop development', ensure 'SQL Server Express LocalDB' 
+     is checked and installed.
+  3. Alternatively, download and install Microsoft SQL Server Express LocalDB.
+• If LocalDB is installed but stopped:
+  Open a Command Prompt or PowerShell and run:
+    sqllocaldb create MSSQLLocalDB
+    sqllocaldb start MSSQLLocalDB
+• If the database is temporarily offline:
+  The application will open smoothly without crashing. Staff can preview live 
+  rental estimates and validate customer inputs offline. On the Dashboard, 
+  a clear status alert displays troubleshooting guidance and a 'Retry LocalDB' 
+  button to reconnect once the database service is running.
+
+4. STAFF CREDENTIALS
+------------------------------------------------------------------------
+• Username: sta001
+• Password: givemethekeys123
+Password is masked by default with an accessible Show/Hide toggle.
+Authentication activities are logged according to the assignment flowchart.
+========================================================================

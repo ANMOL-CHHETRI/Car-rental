@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -8,101 +9,167 @@ using System.IO;
 namespace RentOnCars
 {
     /// <summary>
-    /// Automatically prepares the local SQL Server LocalDB database.
-    /// No manual SQL script execution is required by the user.
+    /// Status information resulting from a database preparation attempt.
     /// </summary>
-    internal static class DatabaseInitializer
+    public class DatabaseInitResult
+    {
+        public bool IsSuccessful { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Guidance { get; set; } = string.Empty;
+        public Exception Error { get; set; }
+    }
+
+    /// <summary>
+    /// Automatically and non-destructively prepares the SQL Server / LocalDB database.
+    /// Preserves existing records, starter cars, and user bookings without dropping tables.
+    /// </summary>
+    public static class DatabaseInitializer
     {
         private const string DatabaseName = "RentOnCarsDB";
         private const string LocalDbInstance = "MSSQLLocalDB";
 
-        private static string ConnectionString
+        public static bool IsInitialized { get; private set; }
+        public static DatabaseInitResult LastResult { get; private set; } = new DatabaseInitResult();
+
+        public static string ConnectionString
         {
             get
             {
-                ConnectionStringSettings setting =
-                    ConfigurationManager.ConnectionStrings["RentOnCarsDb"];
-
+                ConnectionStringSettings setting = ConfigurationManager.ConnectionStrings["RentOnCarsDb"];
                 if (setting == null || string.IsNullOrWhiteSpace(setting.ConnectionString))
-                    throw new InvalidOperationException("The RentOnCarsDb connection string is missing from App.config.");
+                    throw new InvalidOperationException("The 'RentOnCarsDb' connection string is missing from App.config.");
 
                 return setting.ConnectionString;
             }
         }
 
-        public static void Initialize()
+        /// <summary>
+        /// Attempts to initialize the database and returns a detailed status result.
+        /// Does not throw exceptions, ensuring the application startup remains reliable.
+        /// </summary>
+        public static DatabaseInitResult Initialize()
         {
-            // Visual Studio normally installs SqlLocalDB.exe. If the instance has
-            // not been created/started yet, start it automatically.
-            EnsureLocalDbInstance();
+            DatabaseInitResult result = new DatabaseInitResult();
 
-            string masterConnectionString = new SqlConnectionStringBuilder(ConnectionString)
+            try
             {
-                InitialCatalog = "master",
-                ConnectTimeout = 15
-            }.ConnectionString;
+                // Step 1: Ensure LocalDB instance is created and running if LocalDB is installed
+                EnsureLocalDbInstance();
 
-            using (SqlConnection master = new SqlConnection(masterConnectionString))
-            {
-                master.Open();
+                // Step 2: Ensure database catalog exists on SQL Server
+                EnsureDatabaseExists();
 
-                using (SqlCommand command = new SqlCommand(
-                    "IF DB_ID(@DatabaseName) IS NULL CREATE DATABASE [RentOnCarsDB];", master))
+                // Step 3: Ensure tables exist with proper constraints and starter fleet is seeded
+                using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
-                    command.CommandTimeout = 30;
-                    command.Parameters.Add("@DatabaseName", SqlDbType.NVarChar, 128).Value = DatabaseName;
-                    command.ExecuteNonQuery();
+                    connection.Open();
+                    CreateTables(connection);
+                    SeedStarterFleet(connection);
                 }
+
+                IsInitialized = true;
+                result.IsSuccessful = true;
+                result.Message = "Database is online and ready.";
+                result.Guidance = "Connected to SQL Server / LocalDB (RentOnCarsDB).";
+            }
+            catch (Exception ex)
+            {
+                IsInitialized = false;
+                result.IsSuccessful = false;
+                result.Error = ex;
+                result.Message = "Database connection could not be established.";
+                result.Guidance = GenerateGuidanceMessage(ex);
             }
 
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            LastResult = result;
+            return result;
+        }
+
+        private static string GenerateGuidanceMessage(Exception ex)
+        {
+            string sqlLocalDb = FindSqlLocalDbExecutable();
+            if (string.IsNullOrEmpty(sqlLocalDb))
             {
-                connection.Open();
-                CreateTables(connection);
-                SeedCars(connection);
+                return "SQL Server LocalDB executable (SqlLocalDB.exe) was not found on this computer.\n\n" +
+                       "Action required to enable database saving & reports:\n" +
+                       "1. Open Visual Studio Installer -> Modify -> Workloads.\n" +
+                       "2. Under '.NET desktop development', ensure 'SQL Server Express 2019/2022 LocalDB' is checked and installed.\n" +
+                       "3. Alternatively, install SQL Server Express or configure your connection string in App.config to point to your existing SQL instance.\n\n" +
+                       "Offline estimate calculations and input validation will continue to function.";
             }
+
+            return "SqlLocalDB.exe was detected but the database instance could not be contacted.\n\n" +
+                   $"Technical details: {ex.Message}\n\n" +
+                   "Troubleshooting steps:\n" +
+                   "1. Open a command prompt and run: sqllocaldb start MSSQLLocalDB\n" +
+                   "2. Verify the instance is running with: sqllocaldb info MSSQLLocalDB\n" +
+                   "3. Click 'Retry Database Connection' on the Dashboard.";
         }
 
         private static void EnsureLocalDbInstance()
         {
             string sqlLocalDb = FindSqlLocalDbExecutable();
-
-            // If SqlLocalDB.exe is not installed, the normal connection attempt
-            // below will produce the useful SQL Server error instead of hiding it.
             if (string.IsNullOrEmpty(sqlLocalDb))
                 return;
 
-            string info = RunSqlLocalDb(sqlLocalDb, "info " + LocalDbInstance);
+            string info = RunSqlLocalDb(sqlLocalDb, $"info {LocalDbInstance}");
 
             if (string.IsNullOrWhiteSpace(info) ||
-                info.IndexOf("LocalDB instance is not running", StringComparison.OrdinalIgnoreCase) >= 0)
+                info.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                info.IndexOf("LocalDB instance is not running", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                info.IndexOf("State: Stopped", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                // If the instance does not exist, create it. If it already exists,
-                // create simply returns an error which we safely ignore and then start it.
-                RunSqlLocalDb(sqlLocalDb, "create " + LocalDbInstance);
+                // Create if not exists, then start
+                RunSqlLocalDb(sqlLocalDb, $"create {LocalDbInstance}");
+                RunSqlLocalDb(sqlLocalDb, $"start {LocalDbInstance}");
             }
-
-            RunSqlLocalDb(sqlLocalDb, "start " + LocalDbInstance);
+            else if (info.IndexOf("State: Running", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                RunSqlLocalDb(sqlLocalDb, $"start {LocalDbInstance}");
+            }
         }
 
-        private static string FindSqlLocalDbExecutable()
+        /// <summary>
+        /// Locates SqlLocalDB.exe by inspecting PATH first, followed by standard versioned SQL Server paths.
+        /// Resolves the bug where bare executable name was returned before validating availability.
+        /// </summary>
+        public static string FindSqlLocalDbExecutable()
         {
-            string[] candidates =
-            {
-                "SqlLocalDB.exe",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SQL Server", "170", "Tools", "Binn", "SqlLocalDB.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SQL Server", "160", "Tools", "Binn", "SqlLocalDB.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SQL Server", "150", "Tools", "Binn", "SqlLocalDB.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SQL Server", "140", "Tools", "Binn", "SqlLocalDB.exe")
-            };
+            // 1. Check if sqllocaldb is accessible on the current PATH
+            string pathEnv = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            string[] pathDirs = pathEnv.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (string candidate in candidates)
+            foreach (string dir in pathDirs)
             {
-                if (candidate == "SqlLocalDB.exe")
-                    return candidate;
+                try
+                {
+                    string candidate = Path.Combine(dir.Trim(), "SqlLocalDB.exe");
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+                catch
+                {
+                    // Ignore invalid path entries in PATH environment variable
+                }
+            }
 
-                if (File.Exists(candidate))
-                    return candidate;
+            // 2. Check standard versioned installation directories for SQL Server 2025, 2022, 2019, 2017, 2016, 2014, 2012
+            string[] versions = { "170", "160", "150", "140", "130", "120", "110" };
+            string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+            foreach (string v in versions)
+            {
+                string p64 = Path.Combine(progFiles, "Microsoft SQL Server", v, "Tools", "Binn", "SqlLocalDB.exe");
+                if (File.Exists(p64))
+                    return p64;
+
+                if (!string.IsNullOrEmpty(progFilesX86))
+                {
+                    string p32 = Path.Combine(progFilesX86, "Microsoft SQL Server", v, "Tools", "Binn", "SqlLocalDB.exe");
+                    if (File.Exists(p32))
+                        return p32;
+                }
             }
 
             return null;
@@ -124,20 +191,48 @@ namespace RentOnCars
 
                 using (Process process = Process.Start(psi))
                 {
+                    if (process == null)
+                        return string.Empty;
+
                     string output = process.StandardOutput.ReadToEnd();
                     string error = process.StandardError.ReadToEnd();
-                    process.WaitForExit(10000);
+                    process.WaitForExit(15000);
+
                     return output + Environment.NewLine + error;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[DatabaseInitializer] RunSqlLocalDb failed: {ex.Message}");
                 return string.Empty;
+            }
+        }
+
+        private static void EnsureDatabaseExists()
+        {
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(ConnectionString)
+            {
+                InitialCatalog = "master",
+                ConnectTimeout = 10
+            };
+
+            using (SqlConnection masterConn = new SqlConnection(builder.ConnectionString))
+            {
+                masterConn.Open();
+
+                using (SqlCommand cmd = new SqlCommand(
+                    "IF DB_ID(@DatabaseName) IS NULL CREATE DATABASE [RentOnCarsDB];", masterConn))
+                {
+                    cmd.CommandTimeout = 30;
+                    cmd.Parameters.Add("@DatabaseName", SqlDbType.NVarChar, 128).Value = DatabaseName;
+                    cmd.ExecuteNonQuery();
+                }
             }
         }
 
         private static void CreateTables(SqlConnection connection)
         {
+            // Create Cars table if missing
             ExecuteNonQuery(connection, @"
 IF OBJECT_ID(N'dbo.Cars', N'U') IS NULL
 BEGIN
@@ -154,6 +249,7 @@ BEGIN
     );
 END");
 
+            // Create Bookings table if missing
             ExecuteNonQuery(connection, @"
 IF OBJECT_ID(N'dbo.Bookings', N'U') IS NULL
 BEGIN
@@ -175,6 +271,7 @@ BEGIN
     );
 END");
 
+            // Create BookingOptionalExtras table if missing
             ExecuteNonQuery(connection, @"
 IF OBJECT_ID(N'dbo.BookingOptionalExtras', N'U') IS NULL
 BEGIN
@@ -190,24 +287,43 @@ BEGIN
 END");
         }
 
-        private static void SeedCars(SqlConnection connection)
+        /// <summary>
+        /// Non-destructively seeds the starter cars fleet without deleting or duplicating existing vehicles.
+        /// Matches on unique RegistrationNumber to preserve user state.
+        /// </summary>
+        private static void SeedStarterFleet(SqlConnection connection)
         {
-            ExecuteNonQuery(connection, @"
-IF NOT EXISTS (SELECT 1 FROM dbo.Cars)
+            var fleet = new[]
+            {
+                new { Reg = "WAC-001", Type = "CityCar",   Fuel = "Petrol" },
+                new { Reg = "WAC-002", Type = "CityCar",   Fuel = "Diesel" },
+                new { Reg = "WAC-003", Type = "FamilyCar", Fuel = "Petrol" },
+                new { Reg = "WAC-004", Type = "FamilyCar", Fuel = "Diesel" },
+                new { Reg = "WAC-005", Type = "SportsCar", Fuel = "Petrol" },
+                new { Reg = "WAC-006", Type = "SportsCar", Fuel = "Hybrid" },
+                new { Reg = "WAC-007", Type = "SUV",       Fuel = "Diesel" },
+                new { Reg = "WAC-008", Type = "SUV",       Fuel = "Hybrid" },
+                new { Reg = "WAC-009", Type = "SUV",       Fuel = "FullElectric" },
+                new { Reg = "WAC-010", Type = "CityCar",   Fuel = "FullElectric" }
+            };
+
+            const string seedSql = @"
+IF NOT EXISTS (SELECT 1 FROM dbo.Cars WHERE RegistrationNumber = @Reg)
 BEGIN
     INSERT INTO dbo.Cars (RegistrationNumber, IsRented, DailyRate, CarType, FuelType)
-    VALUES
-    (N'WAC-001', 0, 25.00, N'CityCar',   N'Petrol'),
-    (N'WAC-002', 0, 25.00, N'CityCar',   N'Diesel'),
-    (N'WAC-003', 0, 25.00, N'FamilyCar', N'Petrol'),
-    (N'WAC-004', 0, 25.00, N'FamilyCar', N'Diesel'),
-    (N'WAC-005', 0, 25.00, N'SportsCar', N'Petrol'),
-    (N'WAC-006', 0, 25.00, N'SportsCar', N'Hybrid'),
-    (N'WAC-007', 0, 25.00, N'SUV',       N'Diesel'),
-    (N'WAC-008', 0, 25.00, N'SUV',       N'Hybrid'),
-    (N'WAC-009', 0, 25.00, N'SUV',       N'FullElectric'),
-    (N'WAC-010', 0, 25.00, N'CityCar',   N'FullElectric');
-END");
+    VALUES (@Reg, 0, 25.00, @CarType, @FuelType);
+END";
+
+            foreach (var car in fleet)
+            {
+                using (SqlCommand cmd = new SqlCommand(seedSql, connection))
+                {
+                    cmd.Parameters.Add("@Reg", SqlDbType.NVarChar, 20).Value = car.Reg;
+                    cmd.Parameters.Add("@CarType", SqlDbType.NVarChar, 30).Value = car.Type;
+                    cmd.Parameters.Add("@FuelType", SqlDbType.NVarChar, 30).Value = car.Fuel;
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         private static void ExecuteNonQuery(SqlConnection connection, string sql)
