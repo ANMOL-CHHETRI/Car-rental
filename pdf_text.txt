@@ -1,0 +1,146 @@
+=== PAGE 1 ===
+ 
+
+
+=== PAGE 2 ===
+USE CASE SCENARIO OF “WeAreCars” 
+Booking Process 
+ 
+Use Case ID: UC-1 
+Use Case Name: REGISTER CAR BOOKING 
+Last Updated By: Ayoush Chhetri 
+Last Revision Date: 16 September 2026 
+Actors: Primary Actor: Staff Member Secondary Actor: Customer 
+ 
+ 
+ 
+Description: 
+A staff member enters the customer's 
+information and chooses the necessary rental 
+options to make a new automobile rental 
+booking. The system saves the reservation, 
+computes the total cost, and verifies the 
+information. This use case is a component of the 
+stand-alone Windows Forms-based software 
+solution being created for the Sunderland-based 
+car rental business WeAreCars. 
+ 
+ 
+ 
+Trigger: 
+1. Using the preset staff credentials (Username: 
+sta001, Password: givemethekeys123), the 
+employee successfully logs into the system.  
+2. To make a new reservation for a car rental, the 
+employee chooses the "New Booking" option. 
+ 
+ 
+ 
+ 
+ 
+Precondition: 
+1. The system is operational.  
+2. The fixed username (sta001) and password 
+(givemethekeys123) are used by the staff 
+member to log in.  
+3. The client gives the necessary information.  
+4. The client's driver's license is current.  
+5. The client is of legal age to rent a car (age 
+requirement met).  
+6. To verify vehicle availability, the list of 
+currently rented cars is accessible. 
+ 
+ 
+Post Conditions: 
+The chosen vehicle is marked as hired, the 
+booking is successfully saved in the system, the 
+total rental amount is computed, and the booking 
+information are accessible for further use. 
+ 
+ 
+ 
+ 
+Normal Flow: 
+1. A staff member accesses the list of cars that 
+are currently rented by logging in.  
+2. A staff member initiates a new reservation.  
+3. Inputs the customer's required information: 
+age*, address*, first name*, and last name.  
+4. Verifies that the client has a current driver's 
+license (required; if not, the reservation cannot 
+be made). 
+5.Enters the number of rental days* 
+
+=== PAGE 3 ===
+ (mandatory, between 1 and 28), charged at £25 
+per day. 
+6. Chooses the required automobile type: SUV 
+(+£65), sports car (+£75), family car (+£50), or 
+city car (free).  
+7. Chooses the fuel type* (required): gasoline 
+(free), diesel (free), hybrid (+£30), or full electric 
+(+£50).  
+8. You can choose extras like breakdown 
+coverage (+£2 per day) and/or unlimited miles 
+(+£10 per day).  
+9. The system verifies that all required fields 
+have been filled out accurately.  
+10. The automobile type, fuel type, number of 
+days, and any optional extras chosen are all 
+taken into account by the system when 
+calculating the overall rental cost.  
+11. A staff person examines and verifies the 
+reservation.  
+12. The booking is saved by the system, which 
+also refreshes the list of cars that are currently 
+rented. 
+ 
+ 
+ 
+ 
+ 
+ 
+Alternative Flows: 
+1. The reservation cannot be made if the client 
+does not possess a current driver's license.  
+2. If not needed, optional extras like unlimited 
+miles plus £10 per day and breakdown coverage 
+plus £2 per day can be left unchecked.  
+3. The system recalculates the overall cost if a 
+booking option (vehicle type, fuel type, rental 
+days, or extras) is modified.  
+4. The New Booking feature is restricted and 
+login is refused if the password or username 
+entered does not match the set staff credentials 
+(sta001 / givemethekeys123). 
+ 
+ 
+ 
+ 
+ 
+ 
+Exceptions: 
+1. An error notice is sent and the reservation is 
+not saved if a database or system error happens.  
+2. If a staff member enters incorrect data, the 
+system requests that they fix it.  
+3. The reservation cannot be confirmed if the 
+chosen vehicle is not available.  
+4. The system requests a valid value if the rental 
+days fall outside of 1–28.  
+5. The system prompts the employee to fill in 
+any required fields that are left blank. 
+ 
+
+=== PAGE 4 ===
+Flow Chart 
+Login and Credential Validation Process 
+ 
+ 
+ 
+
+=== PAGE 5 ===
+Class Diagram 
+Class Structure of the WeAreCars Booking System 
+ 
+

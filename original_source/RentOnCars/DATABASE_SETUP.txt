@@ -1,0 +1,13 @@
+RentOnCars - Automatic Database Setup
+
+No manual SQL setup is required.
+
+1. Open RentOnCars.sln in Visual Studio.
+2. Press Start / F5.
+3. On the first run, the application automatically creates RentOnCarsDB, its tables, and the starter cars.
+4. The application then opens normally.
+5. Staff login: Username = sta001 | Password = givemethekeys123
+
+The database initialization is built into the application. You do not need to open SQL Server Management Studio, run dbo.database.sql, create tables manually, or edit the connection string.
+
+Requirement: Visual Studio with SQL Server LocalDB installed (normally included with the Visual Studio SQL/data tools).
