@@ -147,6 +147,7 @@ namespace RentOnCars.Tests
             LoginForm form = new LoginForm();
             bool result = form.ValidateCredentials("sta001", "givemethekeys123");
             AssertTrue(result, "Fixed staff credentials 'sta001' and 'givemethekeys123' must be accepted.");
+            AssertTrue(form.ValidateCredentials("admin", "admin"), "Admin credentials 'admin' and 'admin' must also be accepted.");
         }
 
         private static void Test_Credentials_InvalidUsername()

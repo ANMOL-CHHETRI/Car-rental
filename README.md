@@ -38,12 +38,12 @@ The solution adheres strictly to:
 
 ## Staff Credentials
 
-In accordance with the assignment specification, authorized desk staff authenticate using fixed credentials:
+In accordance with the assignment specification and demo access, authorized staff authenticate using either of the following credentials:
 
-| Field | Value |
-|---|---|
-| **Username** | `sta001` |
-| **Password** | `givemethekeys123` |
+| Username | Password | Role | Description |
+|---|---|---|---|
+| `sta001` | `givemethekeys123` | Administrator | Assignment default fixed staff account |
+| `admin` | `admin` | Administrator | Quick admin credential |
 
 - **Security & UX:** Password input is masked by default with an accessible Show/Hide toggle button.
 - **Workflow:** Pressing <kbd>Enter</kbd> submits the login form. Successful logins are audited via `LoginAuditLogger`.

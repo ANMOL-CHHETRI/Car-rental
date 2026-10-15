@@ -37,6 +37,11 @@ after(async () => {
 test('Unauthenticated data access, hostile origins and missing CSRF are rejected', async () => {
   const c = client(); assert.equal((await c.call('/api/fleet')).status, 401);
   assert.equal((await c.call('/api/login', 'POST', { username: 'sta001', password: 'givemethekeys123' }, { Origin: 'http://hostile.example' })).status, 403);
+  const adminClient = client();
+  const adminLogin = await adminClient.call('/api/login', 'POST', { username: 'admin', password: 'admin' });
+  assert.equal(adminLogin.status, 200, JSON.stringify(adminLogin.data));
+  assert.equal(adminLogin.data.username, 'admin');
+  assert.equal(adminLogin.data.role, 'admin');
   await c.login(); assert.equal((await c.call('/api/quotes', 'POST', draft, { 'X-CSRF-Token': '' })).status, 403);
 });
 test('Server rejects fractional, out-of-range, invalid licence and unknown enum values', async () => {

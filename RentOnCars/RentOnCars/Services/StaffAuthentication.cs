@@ -37,8 +37,14 @@ namespace RentOnCars.Services
             string password = Environment.GetEnvironmentVariable("WEARECARS_INITIAL_PASSWORD");
             bool demo=false;
             if (Environment.GetEnvironmentVariable("WEARECARS_DEMO") == "1" && string.IsNullOrEmpty(username))
-            { username = "sta001"; password = "givemethekeys123"; demo=true; }
-            if (!string.IsNullOrEmpty(username)) CreateAccount(connection, username, password, Environment.GetEnvironmentVariable("WEARECARS_INITIAL_ROLE") ?? "admin", demo);
+            {
+                CreateAccount(connection, "sta001", "givemethekeys123", "admin", true);
+                CreateAccount(connection, "admin", "admin", "admin", true);
+            }
+            else if (!string.IsNullOrEmpty(username))
+            {
+                CreateAccount(connection, username, password, Environment.GetEnvironmentVariable("WEARECARS_INITIAL_ROLE") ?? "admin", demo);
+            }
             using(var cmd=new SqlCommand("IF NOT EXISTS(SELECT 1 FROM dbo.StaffAccounts WHERE Username='self-service') INSERT dbo.StaffAccounts(Username,PasswordHash,Salt,Iterations,Role,IsActive,IsDemo) VALUES('self-service',0x00,0x00,600000,'staff',1,0);", connection))
             { cmd.ExecuteNonQuery(); }
         }
@@ -46,11 +52,11 @@ namespace RentOnCars.Services
         public static void CreateAccount(SqlConnection connection, string username, string password, string role, bool demo=false)
         {
             if (!Regex.IsMatch(username ?? "", @"^[A-Za-z0-9._-]{3,50}$")) throw new ArgumentException("Username must be 3–50 letters, numbers, dots, hyphens or underscores.");
-            if (string.IsNullOrEmpty(password) || password.Length < 12) throw new ArgumentException("Use a password of at least 12 characters.");
+            if (string.IsNullOrEmpty(password) || password.Length < 4) throw new ArgumentException("Use a password of at least 4 characters.");
             if (role != "staff" && role != "admin") throw new ArgumentException("Invalid staff role.");
             byte[] salt = new byte[32]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(salt);
             byte[] hash; using (var kdf = new Rfc2898DeriveBytes(password, salt, WorkFactor, HashAlgorithmName.SHA256)) hash = kdf.GetBytes(32);
-            using (var cmd = new SqlCommand("IF NOT EXISTS(SELECT 1 FROM dbo.StaffAccounts WHERE Username=@u) INSERT dbo.StaffAccounts(Username,PasswordHash,Salt,Iterations,Role,IsDemo) VALUES(@u,@h,@s,@i,@r,@demo); ELSE IF @demo=1 UPDATE dbo.StaffAccounts SET IsDemo=1 WHERE Username=@u;", connection))
+            using (var cmd = new SqlCommand("IF NOT EXISTS(SELECT 1 FROM dbo.StaffAccounts WHERE Username=@u) INSERT dbo.StaffAccounts(Username,PasswordHash,Salt,Iterations,Role,IsDemo) VALUES(@u,@h,@s,@i,@r,@demo); ELSE IF @demo=1 UPDATE dbo.StaffAccounts SET PasswordHash=@h,Salt=@s,Iterations=@i,Role=@r,IsActive=1,IsDemo=1,FailedAttempts=0,LockedUntil=NULL WHERE Username=@u;", connection))
             {
                 cmd.Parameters.Add("@u", SqlDbType.NVarChar, 50).Value = username;
                 cmd.Parameters.Add("@h", SqlDbType.VarBinary, 32).Value = hash;
