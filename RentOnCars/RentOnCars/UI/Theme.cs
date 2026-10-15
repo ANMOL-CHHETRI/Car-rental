@@ -18,8 +18,8 @@ namespace RentOnCars.UI
         public static readonly Color CardBorder = Color.FromArgb(226, 232, 240);        // #E2E8F0
         public static readonly Color BorderSubtle = Color.FromArgb(203, 213, 225);      // #CBD5E1
 
-        public static readonly Color AccentPrimary = Color.FromArgb(13, 148, 136);      // #0D9488 (Teal)
-        public static readonly Color AccentPrimaryHover = Color.FromArgb(15, 118, 110); // #0F766E
+        public static readonly Color AccentPrimary = Color.FromArgb(36, 91, 147);      // #0D9488 (Teal)
+        public static readonly Color AccentPrimaryHover = Color.FromArgb(25, 71, 116); // #0F766E
         public static readonly Color AccentBlue = Color.FromArgb(2, 132, 199);          // #0284C7 (Sky Blue)
         public static readonly Color AccentBlueHover = Color.FromArgb(3, 105, 161);     // #0369A1
 
@@ -168,7 +168,7 @@ namespace RentOnCars.UI
             {
                 Text = "WeAreCars",
                 Font = new Font("Segoe UI", 14f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(45, 212, 191), // Bright Teal
+                ForeColor = Color.FromArgb(214, 227, 240), // Bright Teal
                 AutoSize = true,
                 Location = new Point(24, 12)
             };

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using RentOnCars.UI;
 
 namespace RentOnCars
 {
@@ -13,7 +14,8 @@ namespace RentOnCars
         [STAThread]
         private static void Main()
         {
-            string logFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup.log");
+            string logFile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WeAreCars", "startup.log");
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logFile));
             Action<string> log = (msg) =>
             {
                 try { System.IO.File.AppendAllText(logFile, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {msg}\r\n"); } catch { }
@@ -35,23 +37,11 @@ namespace RentOnCars
                 log($"UnhandledException: {e.ExceptionObject}");
             };
 
-            // Attempt automatic database preparation
-            try
-            {
-                log("Calling DatabaseInitializer.Initialize()...");
-                DatabaseInitResult initResult = DatabaseInitializer.Initialize();
-                log($"DatabaseInitializer result: Success={initResult.IsSuccessful}, Message={initResult.Message}");
-            }
-            catch (Exception ex)
-            {
-                log($"Unexpected database init exception: {ex}");
-            }
-
             // Launch WeAreCars application via Welcome splash
             try
             {
-                log("Launching Application.Run(new Welcome_page())...");
-                Application.Run(new Welcome_page());
+                log("Launching RentalApplicationContext...");
+                Application.Run(new RentalApplicationContext());
                 log("Application.Run exited normally.");
             }
             catch (Exception ex)

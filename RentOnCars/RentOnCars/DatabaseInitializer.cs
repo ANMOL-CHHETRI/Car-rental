@@ -5,6 +5,9 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using RentOnCars.Services;
 
 namespace RentOnCars
 {
@@ -35,9 +38,11 @@ namespace RentOnCars
         {
             get
             {
+                string configured = Environment.GetEnvironmentVariable("WEARECARS_CONNECTION_STRING");
+                if (!string.IsNullOrWhiteSpace(configured)) return configured;
                 ConnectionStringSettings setting = ConfigurationManager.ConnectionStrings["RentOnCarsDb"];
                 if (setting == null || string.IsNullOrWhiteSpace(setting.ConnectionString))
-                    throw new InvalidOperationException("The 'RentOnCarsDb' connection string is missing from App.config.");
+                    return @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=RentOnCarsDB;Integrated Security=True;Connect Timeout=5";
 
                 return setting.ConnectionString;
             }
@@ -47,40 +52,42 @@ namespace RentOnCars
         /// Attempts to initialize the database and returns a detailed status result.
         /// Does not throw exceptions, ensuring the application startup remains reliable.
         /// </summary>
-        public static DatabaseInitResult Initialize()
+        public static DatabaseInitResult Initialize(string customConnectionString = null)
         {
             DatabaseInitResult result = new DatabaseInitResult();
-
             try
             {
-                // Step 1: Ensure LocalDB instance is created and running if LocalDB is installed
-                EnsureLocalDbInstance();
-
-                // Step 2: Ensure database catalog exists on SQL Server
-                EnsureDatabaseExists();
-
-                // Step 3: Ensure tables exist with proper constraints and starter fleet is seeded
-                using (SqlConnection connection = new SqlConnection(ConnectionString))
+                string configured = customConnectionString ?? ConnectionString;
+                var builder = new SqlConnectionStringBuilder(configured) { ConnectTimeout = 5 };
+                if (string.IsNullOrWhiteSpace(builder.InitialCatalog))
+                    throw new InvalidOperationException("A target database catalog must be configured.");
+                if (Environment.GetEnvironmentVariable("WEARECARS_SKIP_INITIALIZATION")=="1")
+                {
+                    using(var con=new SqlConnection(builder.ConnectionString)) {con.Open();using(var cmd=new SqlCommand("SELECT MAX(Version) FROM dbo.SchemaVersions",con))if(Convert.ToInt32(cmd.ExecuteScalar())!=2)throw new InvalidOperationException("Prepared schema version 2 is required.");}
+                    IsInitialized=result.IsSuccessful=true;result.Message="Prepared database connected";LastResult=result;return result;
+                }
+                if (builder.DataSource.StartsWith("(localdb)\\", StringComparison.OrdinalIgnoreCase))
+                    EnsureLocalDbInstance(builder.DataSource.Substring(10));
+                EnsureDatabaseExists(builder);
+                using (var connection = new SqlConnection(builder.ConnectionString))
                 {
                     connection.Open();
-                    CreateTables(connection);
-                    SeedStarterFleet(connection);
+                    using (var command = new SqlCommand("DECLARE @r int; EXEC @r=sys.sp_getapplock @Resource='WeAreCarsSchema', @LockMode='Exclusive', @LockOwner='Session', @LockTimeout=15000; IF @r<0 THROW 50003, 'Schema is being prepared by another process.', 1;", connection))
+                        command.ExecuteNonQuery();
+                    ApplyMigrations(connection);
+                    StaffAuthentication.EnsureInitialAccount(connection);
                 }
-
-                IsInitialized = true;
-                result.IsSuccessful = true;
-                result.Message = "Database is online and ready.";
-                result.Guidance = "Connected to SQL Server / LocalDB (RentOnCarsDB).";
+                IsInitialized = result.IsSuccessful = true;
+                result.Message = "Database ready";
+                result.Guidance = builder.InitialCatalog + " on " + builder.DataSource;
             }
             catch (Exception ex)
             {
                 IsInitialized = false;
-                result.IsSuccessful = false;
                 result.Error = ex;
-                result.Message = "Database connection could not be established.";
-                result.Guidance = GenerateGuidanceMessage(ex);
+                result.Message = "Database preparation failed: " + ex.Message;
+                result.Guidance = "Check the configured server/catalog and schema migration errors. " + GenerateGuidanceMessage(ex);
             }
-
             LastResult = result;
             return result;
         }
@@ -106,27 +113,16 @@ namespace RentOnCars
                    "3. Click 'Retry Database Connection' on the Dashboard.";
         }
 
-        private static void EnsureLocalDbInstance()
+        private static void EnsureLocalDbInstance(string instance)
         {
-            string sqlLocalDb = FindSqlLocalDbExecutable();
-            if (string.IsNullOrEmpty(sqlLocalDb))
-                return;
-
-            string info = RunSqlLocalDb(sqlLocalDb, $"info {LocalDbInstance}");
-
-            if (string.IsNullOrWhiteSpace(info) ||
-                info.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                info.IndexOf("LocalDB instance is not running", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                info.IndexOf("State: Stopped", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                // Create if not exists, then start
-                RunSqlLocalDb(sqlLocalDb, $"create {LocalDbInstance}");
-                RunSqlLocalDb(sqlLocalDb, $"start {LocalDbInstance}");
-            }
-            else if (info.IndexOf("State: Running", StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                RunSqlLocalDb(sqlLocalDb, $"start {LocalDbInstance}");
-            }
+            if (!Regex.IsMatch(instance, @"^[a-zA-Z0-9_-]+$")) throw new ArgumentException("Invalid LocalDB instance name.");
+            string executable = FindSqlLocalDbExecutable();
+            if (string.IsNullOrEmpty(executable)) return;
+            string info = RunSqlLocalDb(executable, "info " + instance);
+            if (info.IndexOf("not created", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                info.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0)
+                RunSqlLocalDb(executable, "create " + instance);
+            RunSqlLocalDb(executable, "start " + instance);
         }
 
         /// <summary>
@@ -177,161 +173,62 @@ namespace RentOnCars
 
         private static string RunSqlLocalDb(string executable, string arguments)
         {
-            try
+            var psi = new ProcessStartInfo { FileName = executable, Arguments = arguments,
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+            using (Process process = Process.Start(psi))
             {
-                ProcessStartInfo psi = new ProcessStartInfo
+                if (process == null) throw new InvalidOperationException("Unable to start LocalDB tools.");
+                Task<string> output = process.StandardOutput.ReadToEndAsync();
+                Task<string> error = process.StandardError.ReadToEndAsync();
+                if (!process.WaitForExit(15000))
                 {
-                    FileName = executable,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
-                using (Process process = Process.Start(psi))
-                {
-                    if (process == null)
-                        return string.Empty;
-
-                    string output = process.StandardOutput.ReadToEnd();
-                    string error = process.StandardError.ReadToEnd();
-                    process.WaitForExit(15000);
-
-                    return output + Environment.NewLine + error;
+                    try { process.Kill(); } catch (InvalidOperationException) { }
+                    throw new TimeoutException("LocalDB tools exceeded the 15-second deadline.");
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[DatabaseInitializer] RunSqlLocalDb failed: {ex.Message}");
-                return string.Empty;
+                Task.WaitAll(output, error);
+                string message = output.Result + Environment.NewLine + error.Result;
+                if (process.ExitCode != 0 && !arguments.StartsWith("info ", StringComparison.Ordinal))
+                    throw new InvalidOperationException(message.Trim());
+                return message;
             }
         }
 
-        private static void EnsureDatabaseExists()
+        private static void EnsureDatabaseExists(SqlConnectionStringBuilder configured)
         {
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(ConnectionString)
+            string catalog = configured.InitialCatalog;
+            var master = new SqlConnectionStringBuilder(configured.ConnectionString) { InitialCatalog = "master" };
+            using (var connection = new SqlConnection(master.ConnectionString))
             {
-                InitialCatalog = "master",
-                ConnectTimeout = 10
-            };
-
-            using (SqlConnection masterConn = new SqlConnection(builder.ConnectionString))
-            {
-                masterConn.Open();
-
-                using (SqlCommand cmd = new SqlCommand(
-                    "IF DB_ID(@DatabaseName) IS NULL CREATE DATABASE [RentOnCarsDB];", masterConn))
+                connection.Open();
+                string escaped = catalog.Replace("]", "]]");
+                using (var command = new SqlCommand("IF DB_ID(@catalog) IS NULL CREATE DATABASE [" + escaped + "];", connection))
                 {
-                    cmd.CommandTimeout = 30;
-                    cmd.Parameters.Add("@DatabaseName", SqlDbType.NVarChar, 128).Value = DatabaseName;
-                    cmd.ExecuteNonQuery();
+                    command.Parameters.Add("@catalog", SqlDbType.NVarChar, 128).Value = catalog;
+                    command.ExecuteNonQuery();
                 }
             }
         }
 
-        private static void CreateTables(SqlConnection connection)
+        private static void ApplyMigrations(SqlConnection connection)
         {
-            // Create Cars table if missing
-            ExecuteNonQuery(connection, @"
-IF OBJECT_ID(N'dbo.Cars', N'U') IS NULL
-BEGIN
-    CREATE TABLE dbo.Cars
-    (
-        CarId INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Cars PRIMARY KEY,
-        RegistrationNumber NVARCHAR(20) NOT NULL CONSTRAINT UQ_Cars_Registration UNIQUE,
-        IsRented BIT NOT NULL CONSTRAINT DF_Cars_IsRented DEFAULT (0),
-        DailyRate DECIMAL(10,2) NOT NULL CONSTRAINT CK_Cars_DailyRate CHECK (DailyRate > 0),
-        CarType NVARCHAR(30) NOT NULL CONSTRAINT CK_Cars_CarType CHECK
-            (CarType IN (N'CityCar', N'FamilyCar', N'SportsCar', N'SUV')),
-        FuelType NVARCHAR(30) NOT NULL CONSTRAINT CK_Cars_FuelType CHECK
-            (FuelType IN (N'Petrol', N'Diesel', N'Hybrid', N'FullElectric'))
-    );
-END");
-
-            // Create Bookings table if missing
-            ExecuteNonQuery(connection, @"
-IF OBJECT_ID(N'dbo.Bookings', N'U') IS NULL
-BEGIN
-    CREATE TABLE dbo.Bookings
-    (
-        BookingId INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Bookings PRIMARY KEY,
-        CarId INT NOT NULL,
-        CustomerFirstName NVARCHAR(50) NOT NULL,
-        CustomerSurname NVARCHAR(50) NOT NULL,
-        CustomerAddress NVARCHAR(150) NOT NULL,
-        CustomerAge INT NOT NULL CONSTRAINT CK_Bookings_Age CHECK (CustomerAge >= 18),
-        HasValidLicense BIT NOT NULL,
-        NumberOfDays INT NOT NULL CONSTRAINT CK_Bookings_Days CHECK (NumberOfDays BETWEEN 1 AND 28),
-        CarType NVARCHAR(30) NOT NULL,
-        FuelType NVARCHAR(30) NOT NULL,
-        TotalCost DECIMAL(10,2) NOT NULL CONSTRAINT CK_Bookings_TotalCost CHECK (TotalCost >= 0),
-        CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Bookings_CreatedAt DEFAULT (SYSDATETIME()),
-        CONSTRAINT FK_Bookings_Cars FOREIGN KEY (CarId) REFERENCES dbo.Cars(CarId)
-    );
-END");
-
-            // Create BookingOptionalExtras table if missing
-            ExecuteNonQuery(connection, @"
-IF OBJECT_ID(N'dbo.BookingOptionalExtras', N'U') IS NULL
-BEGIN
-    CREATE TABLE dbo.BookingOptionalExtras
-    (
-        BookingOptionalExtraId INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BookingOptionalExtras PRIMARY KEY,
-        BookingId INT NOT NULL,
-        ExtraName NVARCHAR(50) NOT NULL,
-        DailyPrice DECIMAL(10,2) NOT NULL CONSTRAINT CK_BookingExtras_DailyPrice CHECK (DailyPrice >= 0),
-        NumberOfDays INT NOT NULL CONSTRAINT CK_BookingExtras_Days CHECK (NumberOfDays BETWEEN 1 AND 28),
-        CONSTRAINT FK_BookingExtras_Bookings FOREIGN KEY (BookingId) REFERENCES dbo.Bookings(BookingId) ON DELETE CASCADE
-    );
-END");
-        }
-
-        /// <summary>
-        /// Non-destructively seeds the starter cars fleet without deleting or duplicating existing vehicles.
-        /// Matches on unique RegistrationNumber to preserve user state.
-        /// </summary>
-        private static void SeedStarterFleet(SqlConnection connection)
-        {
-            var fleet = new[]
+            using (var version = new SqlCommand("IF OBJECT_ID('dbo.SchemaVersions') IS NOT NULL SELECT ISNULL(MAX(Version),0) FROM dbo.SchemaVersions ELSE SELECT 0", connection))
+                if (Convert.ToInt32(version.ExecuteScalar()) > 2) throw new InvalidOperationException("This application cannot open a newer database schema.");
+            string sql;
+            using (Stream stream = typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("RentOnCars.DatabaseSchema.sql"))
             {
-                new { Reg = "WAC-001", Type = "CityCar",   Fuel = "Petrol" },
-                new { Reg = "WAC-002", Type = "CityCar",   Fuel = "Diesel" },
-                new { Reg = "WAC-003", Type = "FamilyCar", Fuel = "Petrol" },
-                new { Reg = "WAC-004", Type = "FamilyCar", Fuel = "Diesel" },
-                new { Reg = "WAC-005", Type = "SportsCar", Fuel = "Petrol" },
-                new { Reg = "WAC-006", Type = "SportsCar", Fuel = "Hybrid" },
-                new { Reg = "WAC-007", Type = "SUV",       Fuel = "Diesel" },
-                new { Reg = "WAC-008", Type = "SUV",       Fuel = "Hybrid" },
-                new { Reg = "WAC-009", Type = "SUV",       Fuel = "FullElectric" },
-                new { Reg = "WAC-010", Type = "CityCar",   Fuel = "FullElectric" }
-            };
-
-            const string seedSql = @"
-IF NOT EXISTS (SELECT 1 FROM dbo.Cars WHERE RegistrationNumber = @Reg)
-BEGIN
-    INSERT INTO dbo.Cars (RegistrationNumber, IsRented, DailyRate, CarType, FuelType)
-    VALUES (@Reg, 0, 25.00, @CarType, @FuelType);
-END";
-
-            foreach (var car in fleet)
-            {
-                using (SqlCommand cmd = new SqlCommand(seedSql, connection))
-                {
-                    cmd.Parameters.Add("@Reg", SqlDbType.NVarChar, 20).Value = car.Reg;
-                    cmd.Parameters.Add("@CarType", SqlDbType.NVarChar, 30).Value = car.Type;
-                    cmd.Parameters.Add("@FuelType", SqlDbType.NVarChar, 30).Value = car.Fuel;
-                    cmd.ExecuteNonQuery();
-                }
+                if (stream == null) throw new InvalidOperationException("Canonical database schema resource is missing.");
+                using (var reader = new StreamReader(stream)) sql = reader.ReadToEnd();
             }
-        }
-
-        private static void ExecuteNonQuery(SqlConnection connection, string sql)
-        {
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            using (SqlTransaction transaction = connection.BeginTransaction())
             {
-                command.CommandTimeout = 30;
-                command.ExecuteNonQuery();
+                try
+                {
+                    foreach (string batch in Regex.Split(sql, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase))
+                        if (!string.IsNullOrWhiteSpace(batch))
+                            using (var command = new SqlCommand(batch, connection, transaction)) { command.CommandTimeout = 30; command.ExecuteNonQuery(); }
+                    transaction.Commit();
+                }
+                catch { try { transaction.Rollback(); } catch (InvalidOperationException) { } throw; }
             }
         }
     }

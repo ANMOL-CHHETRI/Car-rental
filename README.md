@@ -3,7 +3,8 @@
 [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.8-blue.svg)](https://dotnet.microsoft.com/)
 [![Language](https://img.shields.io/badge/Language-C%23-green.svg)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![Database](https://img.shields.io/badge/Database-SQL%20Server%20LocalDB-red.svg)](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb)
-[![Tests](https://img.shields.io/badge/Tests-20%2F20%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-42%2F42%20Passed-brightgreen.svg)]()
+[![Audit Status](https://img.shields.io/badge/Audit%20Remediation-38%2F38%20Resolved-brightgreen.svg)](problems.md)
 
 A robust, enterprise-grade C# Windows Forms desktop application developed for the Sunderland branch of **WeAreCars** car rental operations (CET131 Software Engineering Assignment 1). Built with .NET Framework 4.8, ADO.NET parameterized SQL, and SQL Server LocalDB.
 
@@ -125,68 +126,104 @@ $$\text{Total} = (\text{Daily Rate} \times \text{Days}) + \text{Vehicle Surcharg
 
 ---
 
-## Automated Unit & Integration Tests
+## Automated Unit, Regression, Integration & E2E Tests
 
-The solution includes a dedicated automated test suite (`RentOnCars.Tests`) validating all core business logic and domain constraints:
+The solution includes an end-to-end automated test suite spanning 40 comprehensive tests across C# domain logic, SQL transactional concurrency, HTTP API security, and Playwright browser accessibility:
 
-| # | Test Name | Target Area | Result |
+### 1. C# Domain, Regression & SQL Integration Tests (`RentOnCars.Tests`) — 31 Tests
+
+| # | Test Suite & Test Name | Target Area | Result |
 |---|---|---|---|
-| 1 | `Authenticate_ValidStaffCredentials_ReturnsTrue` | Authentication | Pass |
-| 2 | `Authenticate_InvalidStaffCredentials_ReturnsFalse` | Authentication | Pass |
-| 3 | `Validate_CompleteCustomerDetails_IsValid` | Input Validation | Pass |
-| 4 | `Validate_MissingRequiredFields_ReportsErrors` | Input Validation | Pass |
-| 5 | `Validate_AgeBelow18_FailsValidation` | Age Boundary | Pass |
-| 6 | `Validate_WithoutValidLicense_FailsValidation` | License Check | Pass |
-| 7 | `Validate_RentalDaysBoundaries_0_29_Fail_1_28_Pass` | Days Boundaries (0, 1, 28, 29) | Pass |
-| 8 | `Calculate_AllVehicleCategorySurcharges_AreExact` | Vehicle Surcharges | Pass |
-| 9 | `Calculate_AllFuelTypeSurcharges_AreExact` | Fuel Surcharges | Pass |
-| 10 | `Calculate_OptionalExtras_UnlimitedMileageOnly` | Optional Extras | Pass |
-| 11 | `Calculate_OptionalExtras_BreakdownCoverOnly` | Optional Extras | Pass |
-| 12 | `Calculate_OptionalExtras_BothExtras` | Optional Extras | Pass |
-| 13 | `Calculate_AssignmentBenchmark_3Day_SUV_Hybrid_BothExtras_Equals206` | £206.00 Benchmark | Pass |
-| 14 | `CarType_StrictParsing_RejectsInvalidValues` | Enum Parsing | Pass |
-| 15 | `FuelType_StrictParsing_RejectsInvalidValues` | Enum Parsing | Pass |
-| 16 | `PricingCalculator_LiveEstimator_HandlesIncompleteSelection` | Offline Pricing Engine | Pass |
-| 17 | `CustomerStringLengths_DatabaseLimits_Enforced` | DB Boundary Constraints | Pass |
-| 18 | `LoginAuditLogger_RecordsSuccessfulAndFailedEvents` | Audit Logging | Pass |
-| 19 | `Car_MarkAsRented_And_Available_TogglesState` | Domain Model Lifecycle | Pass |
-| 20 | `RentedCarsList_AddAndRemove_MaintainsCollection` | Domain Model Lifecycle | Pass |
+| 1–4 | `Credentials` (Fixed, Invalid Username, Invalid Password, Empty) | Authentication Guard | Pass |
+| 5–10 | `Validation` (Required, Surname Rule, Age Limits, Licence, Duration, DB Lengths) | Input & Schema Bounds | Pass |
+| 11–16 | `Pricing` (Vehicle Surcharges, Fuel Surcharges, Extras, £206 Benchmark, Independence, Labels) | Decimal Arithmetic Engine | Pass |
+| 17–20 | `Data Integrity & Domain` (Strict Enums, RentedCarsList, Flowchart Audit, Discovery) | System Invariants | Pass |
+| 21 | `Regression - Undefined numeric enums rejected` | Strict Enum Boundary | Pass |
+| 22 | `Regression - Vehicle state and domain constraints` | Availability & State Rules | Pass |
+| 23 | `Regression - Allocated rate and stable GBP formatting` | Culture-Independent Money | Pass |
+| 24 | `Regression - Vehicle identity and clear state` | Collection Lifecycle | Pass |
+| 25 | `Regression - Filtered and sorted booking identity` | Report Master-Detail Mapping | Pass |
+| 26 | `Regression - Explicit age and licence entry` | Zero-Assumption Defaults | Pass |
+| 27 | `SQL - Authoritative prices, snapshots, retry and return` | Authoritative DB Terms | Pass |
+| 28 | `SQL - Concurrent booking exclusion` | Concurrency & Row Locking | Pass |
+| 29 | `SQL - Schema constraints and transaction audit` | Check Constraints & Trigger | Pass |
+| 30 | `SQL - Staff authentication and lockout` | PBKDF2 Hashing & Lockout | Pass |
+| 31 | `SQL - Verified backup, safe restore and retention preview` | DB Maintenance & GDPR | Pass |
 
-**Test Execution:** 20/20 passed (100% pass rate).
+### 2. HTTP Server API & Security Tests (`tests/server.test.cjs`) — 5 Tests
+- **Unauthenticated Access, Hostile Origins & CSRF:** Enforces session cookies, origin whitelisting, and `X-CSRF-Token` mutation verification.
+- **Strict Boundary Validation:** Rejects fractional days (`1.9`), exponential notation (`1e2`), invalid licence, and undefined categories.
+- **Reviewed Snapshot & Benchmark Persistence:** Verifies immutable quotation snapshots, server-side assignment, and duplicate-request protection.
+- **Concurrency Isolation:** Guarantees separate concurrent staff sessions cannot allocate the same vehicle.
+- **Data Safety & Persistence:** Confirms customer inputs remain plain text, inventory filters operate, and logout survives new requests.
+
+### 3. Playwright E2E Browser & Layout Tests (`tests/ui/operations.spec.cjs`) — 4 Tests
+- **Authentication Workflow:** Verifies Enter-key sign-in, credential masking, and persistent logout across reloads.
+- **End-to-End Rental Lifecycle:** Customer booking, safe rendering (XSS injection attempt neutralized), reload persistence, and durable return.
+- **Accessible Dialogs & Focus Trap:** Native `<dialog>` focus containment, Escape key dismiss, and fractional input rejection.
+- **Responsive Layout & Navigation:** Zero horizontal overflow across mobile (390px), tablet (720px), and desktop viewports.
+
+**Total Test Count:** 40/40 tests executed (100% pass rate).
 
 ---
 
 ## Project Structure
 
 ```text
-RentOnCars/
-├── RentOnCars.sln                     # Visual Studio Solution (.NET 4.8)
-├── dbo.database.sql                   # Non-destructive SQL Server schema & seed script
-├── DATABASE_SETUP.txt                 # Setup & configuration guide
-├── RentOnCars/
-│   ├── Program.cs                     # Application entry point with resilient startup
-│   ├── App.config                     # LocalDB connection strings
-│   ├── DatabaseInitializer.cs        # Non-destructive schema & starter fleet initializer
-│   ├── UI/
-│   │   └── Theme.cs                   # Centralized design system (Navy/Teal tokens)
-│   ├── Services/
-│   │   ├── PricingCalculator.cs       # Decoupled offline pricing engine
-│   │   ├── BookingValidator.cs        # Business rules and field length validator
-│   │   └── LoginAuditLogger.cs        # Authentication audit logging
-│   ├── Models/
-│   │   └── BookingModels.cs           # Domain models: Car, Booking, OptionalExtras, Enums
-│   ├── Repos/
-│   │   └── Booking_repos.cs           # ADO.NET repository with atomic transactions
-│   ├── Forms:
-│   │   ├── Welcome_page.cs/.Designer.cs       # Branded splash screen
-│   │   ├── Form1.cs/.Designer.cs              # Staff login with Show/Hide toggle
-│   │   ├── Dashboard.cs/.Designer.cs          # KPI metrics dashboard & navigation
-│   │   ├── Details.cs/.Designer.cs            # New booking with live quote sidebar
-│   │   ├── BookingReviewDialog.cs/.Designer.cs# Staff review & confirmation modal
-│   │   └── booking_report.cs/.Designer.cs     # Dual-mode Rented Cars & History reports
-└── RentOnCars.Tests/
-    ├── RentOnCars.Tests.csproj        # Standalone test project
-    └── Program.cs                     # 20 automated domain & integration tests
+Car-rental/
+├── .github/workflows/ci.yml           # Automated CI workflow running all test suites
+├── problems.md                        # Audit checklist tracking all 38 remediated findings
+├── package.json                       # Node.js operational gateway dependencies & test scripts
+├── playwright.config.cjs              # Playwright browser automation configuration
+├── start-desktop.ps1                  # Desktop application launcher (with optional -Demo flag)
+├── start-preview.ps1                  # Web operations preview launcher
+├── scripts/
+│   ├── test.ps1                       # Comprehensive test runner (MSBuild, C# tests, Node, Playwright)
+│   ├── backup.ps1                     # Automated native SQL Server backup
+│   ├── restore.ps1                    # Safe non-destructive database restore to new catalog
+│   ├── privacy.ps1                    # GDPR customer retention & anonymization (preview/apply)
+│   └── create-staff.ps1               # Secure staff/admin account provisioning utility
+├── server/
+│   └── server.cjs                     # Authenticated Node.js gateway with CSRF, rate-limiting & CSP
+├── web_preview/
+│   ├── index.html                     # Semantic, accessible HTML5 operations portal
+│   ├── styles.css                     # Responsive CSS (mobile breakpoints, prefers-reduced-motion)
+│   └── app.js                         # Front-end logic with safe DOM binding and client-side routing
+├── original_source/
+│   ├── ARCHIVE.md                     # Historical quarantine advisory notice
+│   └── RentOnCars/.../dbo.database.sql.disabled # Quarantined destructive setup script
+└── RentOnCars/
+    ├── RentOnCars.sln                 # Visual Studio Solution (.NET 4.8)
+    ├── dbo.database.sql               # Canonical non-destructive schema, migrations & seeds
+    ├── DATABASE_SETUP.txt             # Setup & configuration guide
+    ├── RentOnCars/
+    │   ├── Program.cs                 # Application entry point with resilient startup
+    │   ├── App.config                 # LocalDB connection strings
+    │   ├── DatabaseInitializer.cs     # Non-destructive schema migrations & process runner
+    │   ├── UI/
+    │   │   ├── RentalApplicationContext.cs # Clean window & session lifecycle manager
+    │   │   └── Theme.cs               # Centralized design system tokens
+    │   ├── Services/
+    │   │   ├── PricingCalculator.cs   # Authoritative decoupled pricing engine & GBP formatter
+    │   │   ├── BookingValidator.cs    # Unified business rules & field length validator
+    │   │   ├── StaffAuthentication.cs # PBKDF2 authentication, lockout & session manager
+    │   │   ├── DatabaseMaintenance.cs # Backup, restore, and GDPR anonymization routines
+    │   │   └── LoginAuditLogger.cs    # Bounded, rotating diagnostic login logger
+    │   ├── Models/
+    │   │   └── BookingModels.cs       # Domain models: Car, Booking, OptionalExtras, Enums
+    │   ├── Repos/
+    │   │   └── Booking_repos.cs       # ADO.NET repository with atomic transactions & pagination
+    │   └── Forms:
+    │       ├── Welcome_page.cs        # Branded splash screen
+    │       ├── Form1.cs (LoginForm)   # Staff login with Show/Hide toggle & Enter submission
+    │       ├── Dashboard.cs           # KPI metrics dashboard & navigation
+    │       ├── Details.cs             # New booking with async availability & review snapshot
+    │       ├── BookingReviewDialog.cs # Pre-commit staff review modal
+    │       └── booking_report.cs      # Dual-mode Rented Cars & History reports with return action
+    ├── RentOnCars.Tests/
+    │   ├── Program.cs                 # Domain & SQL test runner
+    │   └── RegressionTests.cs         # Audit regression tests (concurrency, pricing, enums, etc.)
+    └── RentOnCars.WebBridge/          # High-performance CLI worker bridging server.cjs to C# repo
 ```
 
 ---
@@ -196,25 +233,65 @@ RentOnCars/
 ### Prerequisites
 - **Windows OS** (Windows 10 / 11)
 - **.NET Framework 4.8 Runtime / Developer Pack**
-- **Visual Studio 2019 / 2022** (with *.NET desktop development* workload)
-- **SQL Server Express LocalDB** (optional: included in Visual Studio Installer)
+- **Visual Studio 2019 / 2022** (with *.NET desktop development* workload and LocalDB)
+- **Node.js 24+** (for running the web gateway and UI tests)
 
-### Building & Running via Visual Studio
-1. Open `RentOnCars/RentOnCars.sln` in Visual Studio.
-2. Select **Debug** or **Release** configuration with **Any CPU**.
-3. Press <kbd>F5</kbd> or click **Start** to build and run the application.
-
-### Building & Running via Command Line (PowerShell)
+### Running Automated Verification
+To execute the complete automated verification suite (compilation, disposable LocalDB creation, 31 C# tests, 6 API tests, and 5 Playwright browser tests):
 ```powershell
-# 1. Build the solution
-& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" "RentOnCars\RentOnCars.sln" /t:Build /p:Configuration=Debug
-
-# 2. Run the automated test suite
-& "RentOnCars\RentOnCars.Tests\bin\Debug\RentOnCars.Tests.exe"
-
-# 3. Launch the desktop application
-Start-Process -FilePath "RentOnCars\RentOnCars\bin\Debug\RentOnCars.exe"
+powershell -ExecutionPolicy Bypass -File scripts/test.ps1 -WithUI
 ```
+
+### Launching the Desktop Application
+```powershell
+# Standard operational desktop:
+powershell -ExecutionPolicy Bypass -File start-desktop.ps1
+
+# Assignment demo mode (pre-seeds sta001/givemethekeys123):
+powershell -ExecutionPolicy Bypass -File start-desktop.ps1 -Demo
+```
+
+### Launching the Web Portal (Dual Customer Self-Service & Staff Desk)
+The web application provides two interfaces:
+1. **Public Customer Self-Service Portal (`/` or `/#customer`):** Allows public customers to browse live vehicle availability, calculate transparent real-time quotations, confirm reservations with 10-minute price hold tokens, look up bookings with reference number and surname, and view/print rental vouchers.
+2. **Staff & Admin Operations Desk (`/#staff`):** Secure authenticated workspace (`sta001` / `givemethekeys123`) with fleet KPI overview, staff counter reservations, real-time inventory management, complete booking history, and vehicle return workflow.
+
+```powershell
+# Start web portal on port 8000 (or npm run dev):
+powershell -ExecutionPolicy Bypass -File start-preview.ps1 -Demo
+
+# Or with npm:
+npm run dev
+
+# Or with custom port (e.g. 3000):
+powershell -ExecutionPolicy Bypass -File start-preview.ps1 -Demo -Port 3000
+```
+
+---
+
+## Operational Maintenance Scripts
+
+The `scripts/` folder provides tools for production database administration:
+- **Database Backup:**
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts/backup.ps1 [-Destination <path.bak>]
+  ```
+- **Database Restore (Safe & Non-Destructive):**
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts/restore.ps1 -Backup <path.bak> -NewCatalog <CatalogName>
+  ```
+- **GDPR Data Retention & Anonymization:**
+  ```powershell
+  # Preview eligible closed bookings older than 90 days:
+  powershell -ExecutionPolicy Bypass -File scripts/privacy.ps1 -Days 90
+
+  # Execute anonymization of customer PII while preserving financial totals:
+  powershell -ExecutionPolicy Bypass -File scripts/privacy.ps1 -Days 90 -Apply
+  ```
+- **Staff Account Provisioning:**
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts/create-staff.ps1 -Username "jane.doe" -Role "staff"
+  ```
 
 ---
 

@@ -1,0 +1,102 @@
+{
+  "methodology": "Original inline JavaScript executed in Node VM with a minimal DOM stub. No real browser layout or image QA; code injection executes only in this isolated VM.",
+  "results": [
+    {
+      "name": "Initial authentication and reset on reload",
+      "initial": true,
+      "loggedOut": false,
+      "newPageAuthenticated": true
+    },
+    {
+      "name": "Benchmark calculation",
+      "total": 206
+    },
+    {
+      "name": "Independent tabs can allocate the same registration",
+      "first": "WAC-008",
+      "second": "WAC-008",
+      "firstId": "BK-1001",
+      "secondId": "BK-1001"
+    },
+    {
+      "name": "Reload loses history and rental status",
+      "before": 1,
+      "after": 0,
+      "rentedAfterReload": 0
+    },
+    {
+      "name": "Save bypasses authentication, review and input validation",
+      "authenticated": false,
+      "saved": 1,
+      "daysSaved": 99,
+      "total": 3758
+    },
+    {
+      "name": "Fractional and exponent rental values are silently truncated",
+      "fractionalValid": true,
+      "fractionalSaved": 1,
+      "exponentValid": true,
+      "exponentParsed": 1
+    },
+    {
+      "name": "Apostrophes break voucher Inspect handler",
+      "handlerError": "SyntaxError"
+    },
+    {
+      "name": "HTML injection reaches history markup",
+      "payloadLength": 43,
+      "validationAccepted": true,
+      "rawPayloadInMarkup": true,
+      "browserExecutionTested": false
+    },
+    {
+      "name": "Address can inject code into Inspect handler",
+      "handlerCodeExecutedInVm": true
+    },
+    {
+      "name": "Review has no immutable snapshot",
+      "reviewedTotal": "£206.00",
+      "savedTotal": 1131
+    },
+    {
+      "name": "Save drops age, licence, timestamp detail and leaves customer values",
+      "storedKeys": [
+        "id",
+        "time",
+        "clientName",
+        "clientAddr",
+        "reg",
+        "type",
+        "fuel",
+        "days",
+        "hasMileage",
+        "hasBreakdown",
+        "totalPaid"
+      ],
+      "storedTime": "14 Oct 2026",
+      "retainedFirstName": "Alice",
+      "reviewStillEnabledForRentedCar": true,
+      "allocationStillContainsRentedRegistration": true
+    },
+    {
+      "name": "Return changes fleet only, no booking completion record",
+      "rented": false,
+      "bookingHasStatus": false,
+      "bookingHasReturnDate": false
+    },
+    {
+      "name": "Unknown category or fuel silently receives zero surcharge",
+      "total": 75
+    },
+    {
+      "name": "Static accessibility and responsive structure",
+      "responsiveMediaQueries": 0,
+      "reducedMotionSupport": false,
+      "dialogRoles": 0,
+      "ariaModal": false,
+      "keyboardListeners": false,
+      "nativeForms": 0,
+      "customerErrorAssociations": false
+    }
+  ]
+}

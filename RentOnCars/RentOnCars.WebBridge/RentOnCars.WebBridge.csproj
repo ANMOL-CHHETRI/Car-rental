@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
+    <Platform Condition="'$(Platform)'==''">AnyCPU</Platform>
+    <ProjectGuid>{AE6C013A-BCF5-4D77-A22C-088284894F31}</ProjectGuid>
+    <OutputType>Exe</OutputType><AssemblyName>RentOnCars.WebBridge</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion><LangVersion>latest</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath><Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Data"/>
+    <Reference Include="System.Web.Extensions"/><Reference Include="System.Configuration"/>
+    <Compile Include="Program.cs"/>
+    <ProjectReference Include="..\RentOnCars\RentOnCars.csproj"><Project>{AB7D3882-B972-4791-98EB-6777523CF700}</Project><Name>RentOnCars</Name></ProjectReference>
+    <None Include="..\RentOnCars\App.config"><Link>App.config</Link></None>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+</Project>

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace RentOnCars.Services
 {
@@ -30,6 +32,8 @@ namespace RentOnCars.Services
         private static readonly List<LoginAuditEntry> entries = new List<LoginAuditEntry>();
         private static readonly object syncLock = new object();
         private const string LogFileName = "login_audit.log";
+        public static string LastWriteError { get; private set; }
+        private static readonly string logDirectory=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WeAreCars","logs");
 
         public static IReadOnlyList<LoginAuditEntry> Entries
         {
@@ -62,28 +66,34 @@ namespace RentOnCars.Services
         {
             LoginAuditEntry entry = new LoginAuditEntry
             {
-                Timestamp = DateTime.Now,
-                Username = string.IsNullOrWhiteSpace(username) ? "(empty)" : username,
+                Timestamp = DateTime.UtcNow,
+                Username = string.IsNullOrWhiteSpace(username) ? "(empty)" : Regex.Replace(username,@"[\r\n\t]"," "),
                 Success = success,
-                Message = message
+                Message = Regex.Replace(message,@"[\r\n\t]"," ")
             };
 
             lock (syncLock)
             {
                 entries.Add(entry);
-            }
-
-            string line = entry.ToString();
-            Debug.WriteLine("[LOGIN AUDIT] " + line);
-
-            try
-            {
-                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
-                File.AppendAllText(path, line + Environment.NewLine);
-            }
-            catch
-            {
-                // Never crash the application if disk log writing encounters permission/lock issues
+                if(entries.Count>1000)entries.RemoveRange(0,entries.Count-1000);
+                string line=entry.ToString();Debug.WriteLine("[LOGIN AUDIT] "+line);
+                try
+                {
+                    Directory.CreateDirectory(logDirectory);
+                    string path=Path.Combine(logDirectory,LogFileName);
+                    if(File.Exists(path)&&new FileInfo(path).Length>1024*1024)
+                    {
+                        File.Move(path,Path.Combine(logDirectory,"login_audit."+DateTime.UtcNow.ToString("yyyyMMddHHmmssfff")+".log"));
+                        foreach(string old in Directory.GetFiles(logDirectory,"login_audit.*.log").OrderByDescending(File.GetLastWriteTimeUtc).Skip(4))File.Delete(old);
+                    }
+                    File.AppendAllText(path,line+Environment.NewLine);LastWriteError=null;
+                }
+                catch(Exception ex) when(ex is IOException||ex is UnauthorizedAccessException)
+                {
+                    LastWriteError=ex.Message;
+                    Trace.TraceError("Diagnostic login log could not be written: "+ex.Message);
+                    // Authoritative authentication and transaction audit events are committed in SQL.
+                }
             }
         }
     }

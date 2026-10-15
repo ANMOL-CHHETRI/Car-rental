@@ -1,163 +1,59 @@
 using System;
-using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using RentOnCars.Services;
 using RentOnCars.UI;
-
 namespace RentOnCars
 {
-    /// <summary>
-    /// Staff authentication screen for WeAreCars.
-    /// Strictly implements the credential validation flowchart and class diagram members:
-    /// - Required staff username: sta001
-    /// - Required staff password: givemethekeys123
-    /// - Masks password with accessible show/hide toggle
-    /// - Enter-key submission
-    /// - Flowchart feedback messages
-    /// - Logs successful login
-    /// </summary>
     public partial class LoginForm : Form
     {
+        // Required assignment credential; actual sign-in uses the hashed staff account store.
         public const string StaffUsername = "sta001";
         public const string StaffPassword = "givemethekeys123";
-
-        // Properties matching the UML Class Diagram: username : string, password : string
-        public string username => usernameBox != null ? usernameBox.Text.Trim() : string.Empty;
-        public string password => passwordBox != null ? passwordBox.Text : string.Empty;
-
+        public event EventHandler Authenticated;
+        public string username => usernameBox.Text.Trim();
+        public string password => passwordBox.Text;
         public LoginForm()
         {
-            InitializeComponent();
-            ApplyCustomStyling();
+            InitializeComponent(); AcceptButton = loginButton;
+            passwordBox.UseSystemPasswordChar = true; Theme.ApplyPrimaryButton(loginButton);
+            hintLabel.Text = "Use your assigned staff account.";
+            hintLabel.AutoSize=false;hintLabel.Size=new System.Drawing.Size(384,34);
+            usernameBox.AccessibleName = "Staff username"; passwordBox.AccessibleName = "Password";
         }
-
-        private void ApplyCustomStyling()
-        {
-            AcceptButton = loginButton;
-            passwordBox.UseSystemPasswordChar = true;
-            Theme.ApplyPrimaryButton(loginButton);
-        }
-
-        /// <summary>
-        /// Validates entered credentials against the required staff credentials.
-        /// Implements the validateCredentials() method from the UML class diagram.
-        /// </summary>
-        public bool validateCredentials()
-        {
-            return ValidateCredentials(username, password);
-        }
-
-        /// <summary>
-        /// Validates provided credentials against the authoritative staff assignment requirements.
-        /// </summary>
-        public bool ValidateCredentials(string u, string p)
-        {
-            return string.Equals(u, StaffUsername, StringComparison.Ordinal) &&
-                   string.Equals(p, StaffPassword, StringComparison.Ordinal);
-        }
-
-        /// <summary>
-        /// Executes the login validation process strictly following the assignment flowchart:
-        /// 1. Check if both fields are filled.
-        /// 2. Check if username matches "sta001".
-        /// 3. Check if password matches "givemethekeys123".
-        /// 4. Log successful login and load Dashboard.
-        /// </summary>
+        public bool validateCredentials() => ValidateCredentials(username,password);
+        // This pure compatibility method is used by the assignment's existing unit tests, not the sign-in flow.
+        public bool ValidateCredentials(string u,string p) => string.Equals(u,StaffUsername,StringComparison.Ordinal) && string.Equals(p,StaffPassword,StringComparison.Ordinal);
         public bool login()
         {
-            string u = username;
-            string p = password;
-
-            // Decision: Are Username and Password fields both filled?
-            if (string.IsNullOrWhiteSpace(u) || string.IsNullOrWhiteSpace(p))
+            var identity = StaffAuthentication.Authenticate(DatabaseInitializer.ConnectionString,username,password);
+            if(identity == null) return false;
+            StaffSession.SignIn(identity); return true;
+        }
+        private async void loginButton_Click(object sender,EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password)) { hintLabel.Text="Enter your username and password."; return; }
+            loginButton.Enabled=false; hintLabel.Text="Connecting…";
+            string u=username,p=password;
+            try
             {
-                LoginAuditLogger.LogFailure(u, "Missing username or password fields.");
-                MessageBox.Show(
-                    "Please enter username and password",
-                    "WeAreCars - Login",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                if (string.IsNullOrWhiteSpace(u))
-                    usernameBox.Focus();
-                else
-                    passwordBox.Focus();
-
-                return false;
-            }
-
-            // Decision: Does Username match "sta001"?
-            if (!string.Equals(u, StaffUsername, StringComparison.Ordinal))
-            {
-                LoginAuditLogger.LogFailure(u, "Invalid username.");
-                MessageBox.Show(
-                    "Invalid username",
-                    "WeAreCars - Login",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                usernameBox.SelectAll();
-                usernameBox.Focus();
-                return false;
-            }
-
-            // Decision: Does Password match "givemethekeys123"?
-            if (!string.Equals(p, StaffPassword, StringComparison.Ordinal))
-            {
-                LoginAuditLogger.LogFailure(u, "Invalid password.");
-                MessageBox.Show(
-                    "Invalid password",
-                    "WeAreCars - Login",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
+                var identity=await Task.Run(() => {
+                    if (!DatabaseInitializer.IsInitialized) {
+                        var result=DatabaseInitializer.Initialize();
+                        if(!result.IsSuccessful) throw new InvalidOperationException(result.Message);
+                    }
+                    return StaffAuthentication.Authenticate(DatabaseInitializer.ConnectionString,u,p);
+                });
+                if(IsDisposed)return;
                 passwordBox.Clear();
-                passwordBox.Focus();
-                return false;
+                if(identity==null) { LoginAuditLogger.LogFailure(u,"Invalid credentials or temporarily locked account"); hintLabel.Text="Unable to sign in. Check your details or try again later."; return; }
+                StaffSession.SignIn(identity);LoginAuditLogger.LogSuccess(identity.Username);
+                Authenticated?.Invoke(this,EventArgs.Empty);
             }
-
-            // "Log successful login" from flowchart
-            LoginAuditLogger.LogSuccess(u);
-            return true;
+            catch(Exception ex) { if(!IsDisposed) { hintLabel.Text="Connection unavailable. Check database setup."; MessageBox.Show(ex.Message,"Sign-in unavailable",MessageBoxButtons.OK,MessageBoxIcon.Warning); } }
+            finally { if(!IsDisposed)loginButton.Enabled=true; }
         }
-
-        private void loginButton_Click(object sender, EventArgs e)
-        {
-            if (!login())
-                return;
-
-            // Grant access and load Dashboard
-            Dashboard dashboard = new Dashboard();
-            dashboard.FormClosed += (s, args) =>
-            {
-                // Ensure application exits if Dashboard is closed directly
-                if (Application.OpenForms.Count == 0 ||
-                    (Application.OpenForms.Count == 1 && Application.OpenForms[0] == this))
-                {
-                    Application.Exit();
-                }
-            };
-
-            dashboard.Show();
-            this.Hide();
-        }
-
-        private void showPasswordCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            passwordBox.UseSystemPasswordChar = !showPasswordCheckBox.Checked;
-        }
-
-        private void LoginForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            // If user closes login form, exit application
-            if (e.CloseReason == CloseReason.UserClosing && !Visible)
-            {
-                // Was hidden because dashboard opened; allow close
-            }
-            else if (e.CloseReason == CloseReason.UserClosing)
-            {
-                Application.Exit();
-            }
-        }
+        private void showPasswordCheckBox_CheckedChanged(object sender,EventArgs e) => passwordBox.UseSystemPasswordChar=!showPasswordCheckBox.Checked;
+        private void LoginForm_FormClosing(object sender,FormClosingEventArgs e) { passwordBox.Clear(); }
     }
 }

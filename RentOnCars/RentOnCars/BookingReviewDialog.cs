@@ -31,16 +31,16 @@ namespace RentOnCars
             customerNameLabel.Text = $"{booking.CustomerFirstName} {booking.CustomerSurname}";
             customerAddressLabel.Text = booking.CustomerAddress;
             customerAgeLabel.Text = $"{booking.CustomerAge} years old";
-            customerLicenseLabel.Text = booking.HasValidLicense ? "Valid Driving Licence (Verified)" : "Invalid Licence";
+            customerLicenseLabel.Text = booking.HasValidLicense ? "Licence confirmed by staff" : "Invalid Licence";
 
             // Vehicle Details
             vehicleRegLabel.Text = booking.SelectedCar != null
                 ? $"{booking.SelectedCar.RegistrationNumber} ({booking.SelectedCar.CarType} - {booking.SelectedCar.FuelType})"
                 : "No vehicle assigned";
-            rentalDaysLabel.Text = $"{booking.NumberOfDays} Day(s) @ £{pricing.DailyBaseRate:0.00} per day";
+            rentalDaysLabel.Text = $"{booking.NumberOfDays} Day(s) @ {PricingCalculator.FormatMoney(pricing.DailyBaseRate)} per day";
 
             // Itemized Bill
-            baseRentItemLabel.Text = $"Base Fleet Hire ({booking.NumberOfDays} days × £{pricing.DailyBaseRate:0.00}):";
+            baseRentItemLabel.Text = $"Base Fleet Hire ({booking.NumberOfDays} days × {PricingCalculator.FormatMoney(pricing.DailyBaseRate)}):";
             baseRentValueLabel.Text = pricing.FormattedBaseRent;
 
             carSurchargeItemLabel.Text = $"Vehicle Surcharge ({booking.SelectedCar.CarType}):";
@@ -53,11 +53,11 @@ namespace RentOnCars
             if (booking.Extras != null)
             {
                 if (booking.Extras.UnlimitedMileage && booking.Extras.BreakdownCover)
-                    extrasDesc = $"Unlimited Mileage (£{pricing.UnlimitedMileageCost:0.00}) + Breakdown Cover (£{pricing.BreakdownCoverCost:0.00})";
+                    extrasDesc = $"Unlimited Mileage ({PricingCalculator.FormatMoney(pricing.UnlimitedMileageCost)}) + Breakdown Cover ({PricingCalculator.FormatMoney(pricing.BreakdownCoverCost)})";
                 else if (booking.Extras.UnlimitedMileage)
-                    extrasDesc = $"Unlimited Mileage ({booking.NumberOfDays} days × £10.00 = £{pricing.UnlimitedMileageCost:0.00})";
+                    extrasDesc = $"Unlimited Mileage ({booking.NumberOfDays} days × £10.00 = {PricingCalculator.FormatMoney(pricing.UnlimitedMileageCost)})";
                 else if (booking.Extras.BreakdownCover)
-                    extrasDesc = $"Breakdown Cover ({booking.NumberOfDays} days × £2.00 = £{pricing.BreakdownCoverCost:0.00})";
+                    extrasDesc = $"Breakdown Cover ({booking.NumberOfDays} days × £2.00 = {PricingCalculator.FormatMoney(pricing.BreakdownCoverCost)})";
             }
 
             extrasItemLabel.Text = $"Optional Extras ({extrasDesc}):";

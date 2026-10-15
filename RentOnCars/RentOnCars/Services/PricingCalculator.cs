@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using RentOnCars.Models;
 
 namespace RentOnCars.Services
@@ -37,11 +38,11 @@ namespace RentOnCars.Services
         public bool IsComplete { get; set; }
         public string StatusMessage { get; set; } = string.Empty;
 
-        public string FormattedGrandTotal => $"£{GrandTotal:0.00}";
-        public string FormattedBaseRent => $"£{BaseRentTotal:0.00}";
-        public string FormattedCarTypeSurcharge => CarTypeSurcharge > 0m ? $"+£{CarTypeSurcharge:0.00}" : "£0.00 (Included)";
-        public string FormattedFuelTypeSurcharge => FuelTypeSurcharge > 0m ? $"+£{FuelTypeSurcharge:0.00}" : "£0.00 (Included)";
-        public string FormattedExtrasTotal => $"£{ExtrasTotal:0.00}";
+        public string FormattedGrandTotal => PricingCalculator.FormatMoney(GrandTotal);
+        public string FormattedBaseRent => PricingCalculator.FormatMoney(BaseRentTotal);
+        public string FormattedCarTypeSurcharge => CarTypeSurcharge > 0m ? "+" + PricingCalculator.FormatMoney(CarTypeSurcharge) : "£0.00 (Included)";
+        public string FormattedFuelTypeSurcharge => FuelTypeSurcharge > 0m ? "+" + PricingCalculator.FormatMoney(FuelTypeSurcharge) : "£0.00 (Included)";
+        public string FormattedExtrasTotal => PricingCalculator.FormatMoney(ExtrasTotal);
     }
 
     /// <summary>
@@ -54,6 +55,8 @@ namespace RentOnCars.Services
     /// </summary>
     public static class PricingCalculator
     {
+        public static string FormatMoney(decimal amount) => amount.ToString("C2", CultureInfo.GetCultureInfo("en-GB"));
+
         public const decimal BaseRentalDailyRate = 25.00m;
         public const decimal UnlimitedMileageDailyRate = 10.00m;
         public const decimal BreakdownCoverDailyRate = 2.00m;
@@ -73,14 +76,16 @@ namespace RentOnCars.Services
             CarType? carType,
             FuelType? fuelType,
             bool unlimitedMileage,
-            bool breakdownCover)
+            bool breakdownCover,
+            decimal dailyBaseRate = BaseRentalDailyRate)
         {
+            if (dailyBaseRate <= 0m) throw new ArgumentOutOfRangeException(nameof(dailyBaseRate));
             int safeDays = Math.Max(1, Math.Min(28, rentalDays));
 
             PricingBreakdown breakdown = new PricingBreakdown
             {
                 RentalDays = safeDays,
-                DailyBaseRate = BaseRentalDailyRate,
+                DailyBaseRate = dailyBaseRate,
                 SelectedCarType = carType,
                 SelectedFuelType = fuelType,
                 UnlimitedMileageSelected = unlimitedMileage,
@@ -102,10 +107,15 @@ namespace RentOnCars.Services
                 breakdown.FuelTypeSurcharge = fuelType.Value.GetSurcharge();
             }
 
-            if (hasCategory && hasFuel)
+            if (hasCategory && hasFuel && rentalDays >= 1 && rentalDays <= 28)
             {
                 breakdown.IsComplete = true;
                 breakdown.StatusMessage = "Estimate complete";
+            }
+            else if (rentalDays < 1 || rentalDays > 28)
+            {
+                breakdown.IsComplete = false;
+                breakdown.StatusMessage = "Rental duration must be between 1 and 28 whole days";
             }
             else if (!hasCategory && !hasFuel)
             {
@@ -143,6 +153,7 @@ namespace RentOnCars.Services
             if (rentalDays < 1 || rentalDays > 28)
                 throw new ArgumentOutOfRangeException(nameof(rentalDays), "Rental days must be between 1 and 28.");
 
+            if (dailyBaseRate <= 0m) throw new ArgumentOutOfRangeException(nameof(dailyBaseRate), "Daily rate must be positive.");
             decimal baseRent = dailyBaseRate * rentalDays;
             decimal carSurcharge = carType.GetSurcharge();
             decimal fuelSurcharge = fuelType.GetSurcharge();

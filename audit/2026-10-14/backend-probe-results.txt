@@ -1,0 +1,19 @@
+Numeric enum 999 accepted: car=999, fuel=999
+Domain ValidateBooking accepts rented car and 51-character name: True
+Service validator accepts rented/wrong-category vehicle: True
+Service validator accepts undefined category enum: True
+RentedCarsList count for same vehicle ID in different objects: 2
+RentedCarsList.Clear leaves original car rented: True
+At daily rate 40: reviewed estimate=206.00, booking total=251.00
+Zero-day estimate marked complete: True
+Negative daily rate accepted by ComputeTotal: -75
+GBP formatting under fr-FR: £206,00
+Filtered row=WAC-BK-00002, detail=Booking Reference: WAC-BK-00003
+Sorted row=WAC-BK-00002, detail=Booking Reference: WAC-BK-00003
+Isolated SQL database prepared using current setup script.
+Database vehicle CityCar/Petrol @25 saved using caller SUV/Hybrid @1: total=134.00, category=SUV
+History after rate edits: stored total=134.00, reconstructed base rate=99.00, extras daily=12.00
+Concurrent saves for same car: successes=1, rejected=1
+Database accepted blank customer fields, invalid licence, unknown category/fuel and zero total via direct SQL.
+Database accepted duplicate extra with rental days inconsistent with booking.
+Removed only the audit-created catalog from the dedicated audit instance.

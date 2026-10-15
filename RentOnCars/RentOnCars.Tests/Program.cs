@@ -12,6 +12,7 @@ namespace RentOnCars.Tests
         private static int failedCount = 0;
         private static readonly List<string> failureDetails = new List<string>();
 
+        [STAThread]
         private static int Main()
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -48,6 +49,21 @@ namespace RentOnCars.Tests
             RunTest("Domain Model - RentedCarsList Operations", Test_RentedCarsListOperations);
             RunTest("Audit Logging - Flowchart Login Activity Logging", Test_AuditLogging);
             RunTest("Database Discovery - SqlLocalDB Discovery Safety", Test_SqlLocalDbDiscoverySafety);
+
+            RunTest("Regression - Undefined numeric enums rejected", RegressionTests.NumericEnums);
+            RunTest("Regression - Vehicle state and domain constraints", RegressionTests.InvalidVehicleState);
+            RunTest("Regression - Allocated rate and stable GBP formatting", RegressionTests.PricingRateAndCulture);
+            RunTest("Regression - Vehicle identity and clear state", RegressionTests.VehicleIdentity);
+            RunTest("Regression - Filtered and sorted booking identity", RegressionTests.SelectedBookingIdentity);
+            RunTest("Regression - Explicit age and licence entry", RegressionTests.LicenceIsExplicit);
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEARECARS_TEST_CONNECTION_STRING")))
+            {
+                RunTest("SQL - Authoritative prices, snapshots, retry and return", RegressionTests.AuthoritativePricingAndSnapshot);
+                RunTest("SQL - Concurrent booking exclusion", RegressionTests.ConcurrentSave);
+                RunTest("SQL - Schema constraints and transaction audit", RegressionTests.SchemaConstraintsAndAudit);
+                RunTest("SQL - Staff authentication and lockout", RegressionTests.StaffAuthenticationAndLockout);
+                RunTest("SQL - Verified backup, safe restore and retention preview", RegressionTests.BackupRestoreAndRetention);
+            }
 
             sw.Stop();
 

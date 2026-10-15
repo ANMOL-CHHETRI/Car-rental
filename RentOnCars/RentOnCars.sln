@@ -7,12 +7,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentOnCars", "RentOnCars\Re
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentOnCars.Tests", "RentOnCars.Tests\RentOnCars.Tests.csproj", "{C7E3A941-8F32-4E9A-B012-3D569E981234}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentOnCars.WebBridge", "RentOnCars.WebBridge\RentOnCars.WebBridge.csproj", "{AE6C013A-BCF5-4D77-A22C-088284894F31}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AE6C013A-BCF5-4D77-A22C-088284894F31}.Debug|Any CPU.ActiveCfg = Debug|AnyCPU
+		{AE6C013A-BCF5-4D77-A22C-088284894F31}.Debug|Any CPU.Build.0 = Debug|AnyCPU
+		{AE6C013A-BCF5-4D77-A22C-088284894F31}.Release|Any CPU.ActiveCfg = Release|AnyCPU
+		{AE6C013A-BCF5-4D77-A22C-088284894F31}.Release|Any CPU.Build.0 = Release|AnyCPU
 		{AB7D3882-B972-4791-98EB-6777523CF700}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB7D3882-B972-4791-98EB-6777523CF700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB7D3882-B972-4791-98EB-6777523CF700}.Release|Any CPU.ActiveCfg = Release|Any CPU

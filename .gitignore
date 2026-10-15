@@ -4,3 +4,9 @@
 *.suo
 .vs/
 *.log
+
+node_modules/
+test-results/
+playwright-report/
+*.bak
+artifacts/

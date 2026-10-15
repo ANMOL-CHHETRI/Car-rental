@@ -72,6 +72,10 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="Services\StaffAuthentication.cs" />
+    <Compile Include="Services\DatabaseMaintenance.cs" />
+    <Compile Include="UI\RentalApplicationContext.cs" />
+    <EmbeddedResource Include="..\dbo.database.sql"><LogicalName>RentOnCars.DatabaseSchema.sql</LogicalName></EmbeddedResource>
     <Compile Include="DatabaseInitializer.cs" />
     <Compile Include="Models\BookingModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

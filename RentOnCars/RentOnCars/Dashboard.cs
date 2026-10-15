@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+using System.Threading.Tasks;
+using RentOnCars.Services;
 using System.Windows.Forms;
 using RentOnCars.Repos;
 using RentOnCars.UI;
@@ -14,11 +16,14 @@ namespace RentOnCars
     {
         private readonly BookingRepository repository = new BookingRepository();
         private bool isDatabaseAvailable = false;
+        private bool loading;
+        public event EventHandler LogoutRequested;
 
         public Dashboard()
         {
             InitializeComponent();
             ApplyCustomStyling();
+            staffBadgeLabel.Text = StaffSession.Current?.Username ?? "Staff";
         }
 
         private void Dashboard_Load(object sender, EventArgs e)
@@ -39,47 +44,29 @@ namespace RentOnCars
         /// Loads fleet metrics and total bookings from the database.
         /// Displays clear empty and unavailable states when the database is unreachable.
         /// </summary>
-        public void LoadDashboardMetrics()
+        public async void LoadDashboardMetrics()
         {
+            if(loading||IsDisposed)return;
+            loading=true; refreshButton.Enabled=false;
             try
             {
-                string error;
-                if (!repository.TestConnection(out error))
-                {
-                    ShowDatabaseOfflineState(error);
-                    return;
-                }
-
-                DashboardStats stats = repository.GetDashboardStats();
-                isDatabaseAvailable = true;
-
-                // Update KPI Cards
-                totalCarsValueLabel.Text = stats.TotalVehicles.ToString();
-                availableCarsValueLabel.Text = stats.AvailableVehicles.ToString();
-                rentedCarsValueLabel.Text = stats.RentedVehicles.ToString();
-                totalBookingsValueLabel.Text = stats.TotalBookings.ToString();
-
-                // Status Banner
-                dbStatusPanel.BackColor = Theme.SuccessGreenBg;
-                dbStatusLabel.ForeColor = Theme.SuccessGreen;
-                dbStatusLabel.Text = "● Database Online: Connected to SQL Server LocalDB (RentOnCarsDB)";
-                dbGuidanceLabel.Visible = false;
-                retryDbButton.Visible = false;
-
-                // Enable database-dependent actions
-                newBookingButton.Enabled = true;
-                rentedCarsButton.Enabled = true;
-                bookingHistoryButton.Enabled = true;
+                var stats=await Task.Run(() => repository.GetDashboardStats());
+                if(IsDisposed)return;
+                isDatabaseAvailable=true;
+                totalCarsValueLabel.Text=stats.TotalVehicles.ToString(); availableCarsValueLabel.Text=stats.AvailableVehicles.ToString();
+                rentedCarsValueLabel.Text=stats.RentedVehicles.ToString(); totalBookingsValueLabel.Text=stats.TotalBookings.ToString();
+                dbStatusPanel.BackColor=Theme.SuccessGreenBg;dbStatusLabel.ForeColor=Theme.SuccessGreen;
+                dbStatusLabel.Text="Database connected ? Inventory is up to date";dbGuidanceLabel.Visible=false;retryDbButton.Visible=false;
+                newBookingButton.Enabled=rentedCarsButton.Enabled=bookingHistoryButton.Enabled=true;
             }
-            catch (Exception ex)
-            {
-                ShowDatabaseOfflineState(ex.Message);
-            }
+            catch(Exception ex) {if(!IsDisposed)ShowDatabaseOfflineState(ex.Message);}
+            finally {loading=false;if(!IsDisposed)refreshButton.Enabled=true;}
         }
 
         private void ShowDatabaseOfflineState(string errorMessage)
         {
             isDatabaseAvailable = false;
+            rentedCarsButton.Enabled=bookingHistoryButton.Enabled=false;
 
             totalCarsValueLabel.Text = "--";
             availableCarsValueLabel.Text = "--";
@@ -169,9 +156,8 @@ namespace RentOnCars
             if (confirm != DialogResult.Yes)
                 return;
 
-            LoginForm loginForm = new LoginForm();
-            loginForm.Show();
-            this.Close();
+            StaffSession.SignOut();
+            LogoutRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void newBookingButton_Click(object sender, EventArgs e) => openNewBooking();
@@ -184,15 +170,17 @@ namespace RentOnCars
 
         private void refreshButton_Click(object sender, EventArgs e) => LoadDashboardMetrics();
 
-        private void retryDbButton_Click(object sender, EventArgs e)
+        private async void retryDbButton_Click(object sender, EventArgs e)
         {
-            DatabaseInitializer.Initialize();
-            LoadDashboardMetrics();
+            retryDbButton.Enabled=false;
+            await Task.Run(() => DatabaseInitializer.Initialize());
+            if(IsDisposed)return;
+            retryDbButton.Enabled=true; LoadDashboardMetrics();
         }
 
         private void Dashboard_FormClosed(object sender, FormClosedEventArgs e)
         {
-            // If all forms are closed, ensure application terminates cleanly
+            // RentalApplicationContext owns application lifetime.
             if (Application.OpenForms.Count == 0)
             {
                 Application.Exit();

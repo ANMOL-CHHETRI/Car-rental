@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
+using RentOnCars.Services;
 
 namespace RentOnCars.Models
 {
@@ -152,7 +154,7 @@ namespace RentOnCars.Models
             if (string.Equals(normalized, "SUV", StringComparison.OrdinalIgnoreCase))
                 return CarType.SUV;
 
-            if (Enum.TryParse(normalized, true, out CarType parsed))
+            if (char.IsLetter(normalized[0]) && Enum.TryParse(normalized, true, out CarType parsed) && Enum.IsDefined(typeof(CarType), parsed))
                 return parsed;
 
             throw new FormatException($"Invalid vehicle category value '{value}'. Expected CityCar, FamilyCar, SportsCar, or SUV.");
@@ -183,7 +185,7 @@ namespace RentOnCars.Models
                 string.Equals(normalized, "EV", StringComparison.OrdinalIgnoreCase))
                 return FuelType.FullElectric;
 
-            if (Enum.TryParse(normalized, true, out FuelType parsed))
+            if (char.IsLetter(normalized[0]) && Enum.TryParse(normalized, true, out FuelType parsed) && Enum.IsDefined(typeof(FuelType), parsed))
                 return parsed;
 
             throw new FormatException($"Invalid fuel type value '{value}'. Expected Petrol, Diesel, Hybrid, or FullElectric.");
@@ -222,7 +224,7 @@ namespace RentOnCars.Models
         /// </summary>
         public string GetCarDetails()
         {
-            return $"{RegistrationNumber} - {CarType} - {FuelType} (Base: £{DailyRate:0.00}/day)";
+            return $"{RegistrationNumber} - {CarType} - {FuelType} (Base: {PricingCalculator.FormatMoney(DailyRate)}/day)";
         }
 
         /// <summary>
@@ -253,11 +255,13 @@ namespace RentOnCars.Models
     /// </summary>
     public class OptionalExtras
     {
-        public const decimal UnlimitedMileageDailyRate = 10.00m;
-        public const decimal BreakdownCoverDailyRate = 2.00m;
+        public const decimal UnlimitedMileageDailyRate = PricingCalculator.UnlimitedMileageDailyRate;
+        public const decimal BreakdownCoverDailyRate = PricingCalculator.BreakdownCoverDailyRate;
 
         public bool UnlimitedMileage { get; set; }
         public bool BreakdownCover { get; set; }
+        public decimal MileageRate { get; set; } = UnlimitedMileageDailyRate;
+        public decimal CoverRate { get; set; } = BreakdownCoverDailyRate;
 
         public OptionalExtras()
         {
@@ -281,9 +285,9 @@ namespace RentOnCars.Models
 
             decimal dailyExtras = 0m;
             if (UnlimitedMileage)
-                dailyExtras += UnlimitedMileageDailyRate;
+                dailyExtras += MileageRate;
             if (BreakdownCover)
-                dailyExtras += BreakdownCoverDailyRate;
+                dailyExtras += CoverRate;
 
             return dailyExtras * numberOfDays;
         }
@@ -304,9 +308,9 @@ namespace RentOnCars.Models
         {
             decimal daily = 0m;
             if (UnlimitedMileage)
-                daily += UnlimitedMileageDailyRate;
+                daily += MileageRate;
             if (BreakdownCover)
-                daily += BreakdownCoverDailyRate;
+                daily += CoverRate;
             return daily;
         }
 
@@ -316,11 +320,11 @@ namespace RentOnCars.Models
         public string GetDescription()
         {
             if (UnlimitedMileage && BreakdownCover)
-                return "Unlimited Mileage (£10/day), Breakdown Cover (£2/day)";
+                return $"Unlimited mileage ({PricingCalculator.FormatMoney(MileageRate)}/day), breakdown cover ({PricingCalculator.FormatMoney(CoverRate)}/day)";
             if (UnlimitedMileage)
-                return "Unlimited Mileage (£10/day)";
+                return $"Unlimited mileage ({PricingCalculator.FormatMoney(MileageRate)}/day)";
             if (BreakdownCover)
-                return "Breakdown Cover (£2/day)";
+                return $"Breakdown cover ({PricingCalculator.FormatMoney(CoverRate)}/day)";
             return "None";
         }
     }
@@ -335,11 +339,22 @@ namespace RentOnCars.Models
         public string CustomerFirstName { get; set; } = string.Empty;
         public string CustomerSurname { get; set; } = string.Empty;
         public string CustomerAddress { get; set; } = string.Empty;
-        public int CustomerAge { get; set; } = 18;
-        public bool HasValidLicense { get; set; } = true;
+        public int CustomerAge { get; set; }
+        public bool HasValidLicense { get; set; }
         public int NumberOfDays { get; set; } = 1;
         public decimal TotalCost { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? StartsAt { get; set; }
+        public DateTime? DueAt { get; set; }
+        public DateTime? ReturnedAt { get; set; }
+        public string Status { get; set; } = "Active";
+        public string StaffUsername { get; set; } = string.Empty;
+        public string ReturnedBy { get; set; }
+        public string RequestId { get; set; } = Guid.NewGuid().ToString("N");
+        public decimal? ReviewedTotal { get; set; }
+        public PricingBreakdown Pricing { get; set; }
+        public int PricingSnapshotVersion { get; set; }
+        public bool IsAnonymized { get; set; }
 
         public Car SelectedCar { get; set; }
         public OptionalExtras Extras { get; set; }
@@ -348,8 +363,8 @@ namespace RentOnCars.Models
         {
             Extras = new OptionalExtras();
             NumberOfDays = 1;
-            CustomerAge = 18;
-            HasValidLicense = true;
+            CustomerAge = 0;
+            HasValidLicense = false;
         }
 
         /// <summary>
@@ -369,22 +384,9 @@ namespace RentOnCars.Models
         /// </summary>
         public bool ValidateBooking()
         {
-            if (string.IsNullOrWhiteSpace(CustomerFirstName))
-                return false;
-            if (string.IsNullOrWhiteSpace(CustomerSurname))
-                return false;
-            if (string.IsNullOrWhiteSpace(CustomerAddress))
-                return false;
-            if (CustomerAge < 18)
-                return false;
-            if (!HasValidLicense)
-                return false;
-            if (NumberOfDays < 1 || NumberOfDays > 28)
-                return false;
-            if (SelectedCar == null)
-                return false;
-
-            return true;
+            return SelectedCar != null && BookingValidator.Validate(
+                CustomerFirstName, CustomerSurname, CustomerAddress, CustomerAge,
+                HasValidLicense, NumberOfDays, SelectedCar.CarType, SelectedCar.FuelType, SelectedCar).IsValid;
         }
 
         /// <summary>
@@ -396,13 +398,8 @@ namespace RentOnCars.Models
             if (SelectedCar == null)
                 throw new InvalidOperationException("A vehicle must be selected to calculate total cost.");
 
-            decimal dailyBase = SelectedCar.DailyRate > 0m ? SelectedCar.DailyRate : 25.00m;
-            decimal baseRent = dailyBase * NumberOfDays;
-            decimal vehicleSurcharge = SelectedCar.CarType.GetSurcharge();
-            decimal fuelSurcharge = SelectedCar.FuelType.GetSurcharge();
-            decimal extrasCost = Extras != null ? Extras.CalculateExtrasCost(NumberOfDays) : 0m;
-
-            return baseRent + vehicleSurcharge + fuelSurcharge + extrasCost;
+            return PricingCalculator.ComputeTotal(NumberOfDays, SelectedCar.CarType, SelectedCar.FuelType,
+                Extras != null && Extras.UnlimitedMileage, Extras != null && Extras.BreakdownCover, SelectedCar.DailyRate);
         }
 
         /// <summary>
@@ -426,7 +423,7 @@ namespace RentOnCars.Models
     {
         private readonly List<Car> rentedCars = new List<Car>();
 
-        public List<Car> RentedCars => rentedCars;
+        public IReadOnlyList<Car> RentedCars => rentedCars.AsReadOnly();
 
         public int Count => rentedCars.Count;
 
@@ -436,8 +433,7 @@ namespace RentOnCars.Models
         /// </summary>
         public void DisplayRentedCars()
         {
-            // Provides domain representation of rented cars.
-            // Populates and prepares collection for display in UI grids/reports.
+            System.Diagnostics.Debug.WriteLine(GetSummary());
         }
 
         public string GetSummary()
@@ -456,7 +452,7 @@ namespace RentOnCars.Models
 
         public void AddRentedCar(Car car)
         {
-            if (car != null && !rentedCars.Contains(car))
+            if (car != null && !rentedCars.Any(c => SameVehicle(c, car)))
             {
                 car.MarkAsRented();
                 rentedCars.Add(car);
@@ -465,16 +461,22 @@ namespace RentOnCars.Models
 
         public void RemoveRentedCar(Car car)
         {
-            if (car != null && rentedCars.Contains(car))
+            Car existing = car == null ? null : rentedCars.FirstOrDefault(c => SameVehicle(c, car));
+            if (existing != null)
             {
+                existing.MarkAsAvailable();
                 car.MarkAsAvailable();
-                rentedCars.Remove(car);
+                rentedCars.Remove(existing);
             }
         }
 
         public void Clear()
         {
+            foreach (Car car in rentedCars) car.MarkAsAvailable();
             rentedCars.Clear();
         }
+
+        private static bool SameVehicle(Car a, Car b) => a.CarId > 0 && b.CarId > 0
+            ? a.CarId == b.CarId : string.Equals(a.RegistrationNumber, b.RegistrationNumber, StringComparison.OrdinalIgnoreCase);
     }
 }

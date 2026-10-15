@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows.Forms;
 using RentOnCars.Models;
 using RentOnCars.Repos;
@@ -16,7 +18,10 @@ namespace RentOnCars
     public partial class Details : Form
     {
         private readonly BookingRepository repository = new BookingRepository();
-        private readonly ErrorProvider errorProvider = new ErrorProvider();
+        private readonly ErrorProvider errorProvider;
+        private string availabilityKey;
+        private int availabilityVersion;
+        private bool resetting;
 
         private Car allocatedCar = null;
         private PricingBreakdown currentPricing = null;
@@ -25,6 +30,8 @@ namespace RentOnCars
         public Details()
         {
             InitializeComponent();
+            if(components==null)components=new Container();
+            errorProvider=new ErrorProvider(components) { ContainerControl=this };
             ConfigureOptions();
             ApplyCustomStyling();
         }
@@ -43,9 +50,9 @@ namespace RentOnCars
             daysupdown.Maximum = 28;
             daysupdown.Value = 1;
 
-            ageupdown.Minimum = 18;
+            ageupdown.Minimum = 0;
             ageupdown.Maximum = 120;
-            ageupdown.Value = 25;
+            ageupdown.Value = 0;
 
             // Populate category combobox
             carcombobox.Items.Clear();
@@ -61,7 +68,7 @@ namespace RentOnCars
             fuelcombobox.Items.Add(FuelType.Hybrid.ToDisplayName());
             fuelcombobox.Items.Add(FuelType.FullElectric.ToDisplayName());
 
-            yesradiobutton.Checked = true;
+            yesradiobutton.Checked = false;
         }
 
         private void ApplyCustomStyling()
@@ -117,10 +124,10 @@ namespace RentOnCars
 
             // 1. Calculate live estimate independently of the database
             currentPricing = PricingCalculator.CalculateEstimate(
-                days, carType, fuelType, unlimitedMileage, breakdownCover);
+                days, carType, fuelType, unlimitedMileage, breakdownCover, allocatedCar?.DailyRate ?? PricingCalculator.BaseRentalDailyRate);
 
             // Update live estimate UI panel
-            estimateDaysLabel.Text = $"{currentPricing.RentalDays} Day(s) @ £{currentPricing.DailyBaseRate:0.00}/day";
+            estimateDaysLabel.Text = $"{currentPricing.RentalDays} Day(s) @ {PricingCalculator.FormatMoney(currentPricing.DailyBaseRate)}/day";
             estimateBaseValueLabel.Text = currentPricing.FormattedBaseRent;
 
             estimateCarTypeValueLabel.Text = carType.HasValue
@@ -152,41 +159,28 @@ namespace RentOnCars
             ValidateFormInline(silent: true);
         }
 
-        private void CheckVehicleAvailability(CarType? carType, FuelType? fuelType)
+        private async void CheckVehicleAvailability(CarType? carType, FuelType? fuelType)
         {
-            allocatedCar = null;
-
-            if (!carType.HasValue || !fuelType.HasValue)
+            string key=carType.HasValue&&fuelType.HasValue ? carType+":"+fuelType : null;
+            if(key==availabilityKey)return;
+            availabilityKey=key; allocatedCar=null; int version=++availabilityVersion;
+            if(key==null)
             {
-                availabilityStatusLabel.Text = "Select vehicle category and fuel type to check fleet availability.";
-                availabilityStatusLabel.ForeColor = Theme.TextMuted;
-                availabilityBadgePanel.BackColor = Color.FromArgb(241, 245, 249);
-                return;
+                availabilityStatusLabel.Text="Select a category and fuel type.";
+                availabilityStatusLabel.ForeColor=Theme.TextMuted;return;
             }
-
+            availabilityStatusLabel.Text="Checking availability?";
             try
             {
-                allocatedCar = repository.GetAvailableCar(carType.Value, fuelType.Value);
-
-                if (allocatedCar != null)
-                {
-                    availabilityStatusLabel.Text = $"Available: Allocated Registration [{allocatedCar.RegistrationNumber}]";
-                    availabilityStatusLabel.ForeColor = Theme.SuccessGreen;
-                    availabilityBadgePanel.BackColor = Theme.SuccessGreenBg;
-                }
-                else
-                {
-                    availabilityStatusLabel.Text = $"Unavailable: All {carType.Value} ({fuelType.Value}) vehicles are currently rented.";
-                    availabilityStatusLabel.ForeColor = Theme.DangerRed;
-                    availabilityBadgePanel.BackColor = Theme.DangerRedBg;
-                }
+                Car car=await Task.Run(() => repository.GetAvailableCar(carType.Value,fuelType.Value));
+                if(IsDisposed||version!=availabilityVersion)return;
+                allocatedCar=car;
+                availabilityStatusLabel.Text=car!=null ? "Allocated: "+car.RegistrationNumber : "No vehicle available for this selection.";
+                availabilityStatusLabel.ForeColor=car!=null ? Theme.SuccessGreen : Theme.DangerRed;
+                availabilityBadgePanel.BackColor=car!=null ? Theme.SuccessGreenBg : Theme.DangerRedBg;
             }
-            catch (Exception)
-            {
-                availabilityStatusLabel.Text = "Database offline: Fleet availability cannot be verified.";
-                availabilityStatusLabel.ForeColor = Theme.WarningAmber;
-                availabilityBadgePanel.BackColor = Theme.WarningAmberBg;
-            }
+            catch(Exception) {if(IsDisposed||version!=availabilityVersion)return;availabilityStatusLabel.Text="Availability unavailable. Check the database connection.";availabilityStatusLabel.ForeColor=Theme.WarningAmber;}
+            UpdateLivePricingAndAvailability();
         }
 
         #endregion
@@ -256,7 +250,7 @@ namespace RentOnCars
 
         #region Booking Submission & Review Workflow
 
-        private void proceedButton_Click(object sender, EventArgs e)
+        private async void proceedButton_Click(object sender, EventArgs e)
         {
             if (isSaving)
                 return;
@@ -275,9 +269,13 @@ namespace RentOnCars
                 return;
             }
 
-            // Build booking domain object
+            string actor;
+            try { actor=StaffSession.RequireUsername(); }
+            catch(UnauthorizedAccessException ex) { MessageBox.Show(ex.Message,"Session expired"); return; }
+            // Build a single immutable review request from validated inputs.
             Booking booking = new Booking
             {
+                StaffUsername = actor,
                 CustomerFirstName = firstnamebox.Text.Trim(),
                 CustomerSurname = lastnamebox.Text.Trim(),
                 CustomerAddress = addressbox.Text.Trim(),
@@ -295,6 +293,8 @@ namespace RentOnCars
 
             // Calculate authoritative total
             booking.CreateBooking();
+            booking.ReviewedTotal = currentPricing.GrandTotal;
+            booking.Pricing = currentPricing;
 
             // Step: Let staff review details, vehicle, days, extras, and total before saving
             using (BookingReviewDialog reviewDialog = new BookingReviewDialog(booking, currentPricing))
@@ -307,19 +307,21 @@ namespace RentOnCars
             }
 
             // Explicit confirmation received: Save atomically
-            SaveBookingToDatabase(booking);
+            await SaveBookingToDatabase(booking);
         }
 
-        private void SaveBookingToDatabase(Booking booking)
+        private async Task SaveBookingToDatabase(Booking booking)
         {
             try
             {
                 isSaving = true;
                 proceedButton.Enabled = false;
                 Cursor = Cursors.WaitCursor;
+                mainContainer.Enabled=false; clearButton.Enabled=false;
 
                 // Rechecks availability during transaction, saves booking + extras, and marks car rented atomically
-                int bookingId = repository.SaveBooking(booking);
+                int bookingId = await Task.Run(() => repository.SaveBooking(booking));
+                if(IsDisposed)return;
 
                 // Display official receipt with saved booking ID after success
                 DisplayBookingReceipt(booking, bookingId);
@@ -329,6 +331,7 @@ namespace RentOnCars
             }
             catch (Exception ex)
             {
+                if(IsDisposed)return;
                 // Retain entered information if saving fails
                 MessageBox.Show(
                     "Unable to complete the booking.\n\n" +
@@ -341,13 +344,16 @@ namespace RentOnCars
             finally
             {
                 isSaving = false;
-                Cursor = Cursors.Default;
-                UpdateLivePricingAndAvailability();
+                if(!IsDisposed) {
+                    Cursor = Cursors.Default;mainContainer.Enabled=true;clearButton.Enabled=true;
+                    availabilityKey=null; allocatedCar=null;UpdateLivePricingAndAvailability();
+                }
             }
         }
 
         private void DisplayBookingReceipt(Booking booking, int bookingId)
         {
+            PricingBreakdown receiptPricing = booking.Pricing;
             string extras = booking.Extras != null ? booking.Extras.GetDescription() : "None";
 
             string receipt =
@@ -356,7 +362,7 @@ namespace RentOnCars
                 "====================================================\n\n" +
                 $"Booking Reference : WAC-BK-{bookingId:D5}\n" +
                 $"Date & Time       : {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
-                $"Staff Member      : sta001\n\n" +
+                $"Staff Member      : {booking.StaffUsername}\n\n" +
                 "--- CUSTOMER DETAILS ---\n" +
                 $"Name              : {booking.CustomerFirstName} {booking.CustomerSurname}\n" +
                 $"Address           : {booking.CustomerAddress}\n" +
@@ -368,12 +374,12 @@ namespace RentOnCars
                 $"Rental Duration   : {booking.NumberOfDays} Day(s)\n" +
                 $"Optional Extras   : {extras}\n\n" +
                 "--- FINANCIAL BREAKDOWN ---\n" +
-                $"Base Fleet Hire   : £{currentPricing.BaseRentTotal:0.00}\n" +
-                $"Vehicle Surcharge : £{currentPricing.CarTypeSurcharge:0.00}\n" +
-                $"Fuel Surcharge    : £{currentPricing.FuelTypeSurcharge:0.00}\n" +
-                $"Extras Surcharge  : £{currentPricing.ExtrasTotal:0.00}\n" +
+                $"Base Fleet Hire   : {PricingCalculator.FormatMoney(receiptPricing.BaseRentTotal)}\n" +
+                $"Vehicle Surcharge : {PricingCalculator.FormatMoney(receiptPricing.CarTypeSurcharge)}\n" +
+                $"Fuel Surcharge    : {PricingCalculator.FormatMoney(receiptPricing.FuelTypeSurcharge)}\n" +
+                $"Extras Surcharge  : {PricingCalculator.FormatMoney(receiptPricing.ExtrasTotal)}\n" +
                 "----------------------------------------------------\n" +
-                $"TOTAL AMOUNT PAID : £{booking.TotalCost:0.00} GBP\n" +
+                $"RENTAL TOTAL DUE : {PricingCalculator.FormatMoney(booking.TotalCost)} GBP\n" +
                 "====================================================\n\n" +
                 "Vehicle status updated to HIRED. Have a safe journey!";
 
@@ -386,12 +392,13 @@ namespace RentOnCars
 
         private void ClearForm()
         {
+            resetting=true;
             firstnamebox.Clear();
             lastnamebox.Clear();
             addressbox.Clear();
-            ageupdown.Value = 25;
+            ageupdown.Value = 0;
             daysupdown.Value = 1;
-            yesradiobutton.Checked = true;
+            yesradiobutton.Checked = false;
             noradiobutton.Checked = false;
             carcombobox.SelectedIndex = -1;
             fuelcombobox.SelectedIndex = -1;
@@ -400,6 +407,7 @@ namespace RentOnCars
             errorProvider.Clear();
             allocatedCar = null;
 
+            availabilityKey=null; resetting=false;
             firstnamebox.Focus();
         }
 
@@ -409,7 +417,7 @@ namespace RentOnCars
 
         private void OptionChanged(object sender, EventArgs e)
         {
-            UpdateLivePricingAndAvailability();
+            if(!resetting) { StaffSession.Touch(); UpdateLivePricingAndAvailability(); }
         }
 
         private void clearButton_Click(object sender, EventArgs e)

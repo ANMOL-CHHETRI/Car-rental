@@ -1,0 +1,1108 @@
+{
+  "date": "2026-10-14",
+  "workspace": "C:/Users/beepl/dev/Car-rental",
+  "issues": [
+    {
+      "id": "W01",
+      "severity": "High",
+      "area": "Web",
+      "kind": "Architecture gap",
+      "verification": "Runtime probe",
+      "title": "The preview has no durable or shared backend",
+      "impact": "Bookings and rental flags exist only in JavaScript arrays. Reloading loses data; separate pages can allocate WAC-008 with the same BK-1001 reference. Nothing reaches the C# repository or SQL database.",
+      "reproduce": "Save a booking, reload, or save from two independent page contexts. Both contexts assigned WAC-008/BK-1001; reload returned history to zero.",
+      "fix": "Use a real authenticated API with database persistence and server-generated IDs; clearly label the current page as a demo until integrated.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1600
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1614
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2019
+        }
+      ]
+    },
+    {
+      "id": "W02",
+      "severity": "High",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "Authentication starts enabled and reload reverses logout",
+      "impact": "The dashboard is visible and isStaffAuthenticated starts true. Credentials are prefilled and disclosed. Logout only changes page memory, so a reload grants access again.",
+      "reproduce": "The probe observed initial=true, logout=false, and a fresh page=true.",
+      "fix": "Start unauthenticated and enforce authorization on the server. Remove credential prefills and use a genuine session for any deployed version.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1037
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1584
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1616
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2178
+        }
+      ]
+    },
+    {
+      "id": "W03",
+      "severity": "High",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe + source",
+      "title": "Customer input can inject HTML and executable Inspect code",
+      "impact": "History interpolates names into innerHTML and names/addresses into an inline JavaScript attribute. A 43-character HTML payload passes validation; an address payload executed a harmless marker in the isolated VM. Ordinary O'Neil or King's Road also causes an Inspect SyntaxError.",
+      "reproduce": "Save O'Neil / 17 King's Road and compile the generated handler; it fails. A synthetic address ending the alert string executed auditInjected=1 in the VM. Real browser execution was not tested.",
+      "fix": "Render user values with textContent and attach event listeners using structured record data. Never interpolate customer text into HTML or JavaScript.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 2118
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2121
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2127
+        }
+      ]
+    },
+    {
+      "id": "W04",
+      "severity": "High",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "Save and return functions bypass authorization and validation",
+      "impact": "Only screen navigation checks authentication. commitBookingNow does not check login, rerun validation, or require a reviewed booking. A synthetic logged-out call saved empty customer fields, an invalid licence selection, and 99 days.",
+      "reproduce": "Set invalid fields, log out, invoke commitBookingNow: one record was saved for 99 days at £3,758.",
+      "fix": "Validate an immutable request at the final save boundary and require server authorization for save and return actions.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1752
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1952
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1988
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2087
+        }
+      ]
+    },
+    {
+      "id": "W05",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "The saved booking is not the reviewed snapshot",
+      "impact": "The review displays current fields, but save reads the editable page again and chooses another currently available car. If underlying fields or allocation change, the saved record can differ from what staff approved.",
+      "reproduce": "Review a 3-day £206 booking, change the underlying days to 28, then save: £1,131 was recorded. The change was injected by the audit probe; keyboard access behind modals is also unguarded.",
+      "fix": "Capture the validated booking and allocated car when opening review; save that snapshot and require a new review if it changes.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1952
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1963
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1988
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2000
+        }
+      ]
+    },
+    {
+      "id": "W06",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "Numeric inputs are silently truncated and incompletely validated",
+      "impact": "parseInt accepts 1.9 as 1 and 1e2 as 1, so duration differs from the entered number. The maximum age is not enforced in JavaScript. Invalid days still produce quotes, and unknown pricing selections silently use zero surcharges.",
+      "reproduce": "Both 1.9 and 1e2 passed runValidation. The first saved as 1 day. Unknown category/fuel returned £75 for 3 days instead of an error.",
+      "fix": "Use Number, Number.isInteger, explicit bounds, and input validity checks. Reject unknown categories/fuels and invalid estimates.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1784
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1803
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1878
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1939
+        }
+      ]
+    },
+    {
+      "id": "W07",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "The saved web record omits age, licence and a precise timestamp",
+      "impact": "Age and licence are used on screen but discarded by bookingRec. time stores only a locale-formatted date, preventing reliable chronological auditing of multiple bookings on one day.",
+      "reproduce": "The saved record keys contain neither age nor licence; time was '14 Oct 2026'.",
+      "fix": "Persist all validated customer and rental fields, actor ID, and an unambiguous timestamp.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1958
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2005
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2007
+        }
+      ]
+    },
+    {
+      "id": "W08",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Confirmed defect",
+      "verification": "Source",
+      "title": "System health and security claims are fabricated",
+      "impact": "The page claims LocalDB connectivity, row locking, persistent transaction logging and live telemetry without implementing those integrations. The receipt claims an atomic database update even though only an array changed.",
+      "reproduce": "Inspect the System & Security Status panel and receipt against the JavaScript implementation: there is no fetch/API/database/logging implementation.",
+      "fix": "Report actual server health and capabilities, or explicitly mark simulated data and demo operations.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1044
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1165
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1168
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1171
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1547
+        }
+      ]
+    },
+    {
+      "id": "W09",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Accessibility defect",
+      "verification": "Source",
+      "title": "Vehicle and fuel selectors cannot be operated by keyboard",
+      "impact": "Clickable div elements have no native button/radio semantics, tabindex, keyboard handling or selected-state accessibility attributes. The brand shortcut has the same issue.",
+      "reproduce": "Category cards and fuel chips rely solely on onclick. Static inspection found no keyboard event handlers.",
+      "fix": "Use native radio groups/buttons with labels, visible focus, and accessible selection state.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 992
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1249
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1325
+        }
+      ]
+    },
+    {
+      "id": "W10",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Accessibility defect",
+      "verification": "Source",
+      "title": "Modals lack accessible dialog behavior and login Enter submission",
+      "impact": "Modals do not set role=dialog/aria-modal, move or trap focus, disable background controls, support Escape, or restore focus. Login has no form submission or keyboard listener.",
+      "reproduce": "Static inspection found zero dialog roles, aria-modal attributes, native forms, or keyboard handlers; close buttons and the password icon also lack descriptive labels.",
+      "fix": "Implement accessible dialog focus management and keyboard behavior; use a login form and submit button, and associate field errors with inputs.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1500
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1567
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1585
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1592
+        }
+      ]
+    },
+    {
+      "id": "W11",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Layout risk",
+      "verification": "Source inference",
+      "title": "Small screens and zoom have no responsive layout strategy",
+      "impact": "There are no media queries. A fixed-height, unwrapped header and fixed multi-column grids remain at narrow widths; body hides horizontal overflow. The 280px fleet search and modal header/body/footer heights increase clipping risk.",
+      "reproduce": "Source has zero @media rules, fixed four-column grids and overflow-x:hidden. Actual phone/zoom screenshots could not be checked in this session.",
+      "fix": "Add responsive breakpoints/wrapping, single-column forms, adaptive navigation, and a height-bounded scrollable modal. Verify phone and 200% zoom views.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 56
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 81
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 433
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 547
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 631
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 967
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1438
+        }
+      ]
+    },
+    {
+      "id": "W12",
+      "severity": "Low",
+      "area": "Web",
+      "kind": "Accessibility gap",
+      "verification": "Source",
+      "title": "Continuous animation has no reduced-motion option",
+      "impact": "Multiple elements animate indefinitely; there is no prefers-reduced-motion handling or pause control. The decorative motion can distract staff and cause discomfort. GPU/performance cost was not benchmarked.",
+      "reproduce": "Static inspection found multiple infinite animations and no reduced-motion support.",
+      "fix": "Honor reduced-motion preferences and allow decorative animations to be paused.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 121
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 340
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 379
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 421
+        }
+      ]
+    },
+    {
+      "id": "W13",
+      "severity": "Medium",
+      "area": "Web",
+      "kind": "Workflow defect",
+      "verification": "Runtime probe + source",
+      "title": "Saving and logout retain customer data and stale form state",
+      "impact": "commitBookingNow does not clear the customer's fields or refresh allocation/pricing immediately. logoutStaff leaves inputs and history in memory. The audit observed the rented WAC-008 still displayed as allocated and Review still enabled behind the receipt.",
+      "reproduce": "Save a synthetic booking; the first name remains Alice and the allocation contains rented WAC-008. Logout changes only screen visibility and auth flag.",
+      "fix": "Reset the completed form and refresh allocation; clear sensitive session state on logout and deliberately retain drafts only for failed saves.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 2019
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2032
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2178
+        }
+      ]
+    },
+    {
+      "id": "W14",
+      "severity": "Low",
+      "area": "Web",
+      "kind": "Usability gap",
+      "verification": "Source",
+      "title": "Reports and navigation are limited",
+      "impact": "Rented Cars renders the entire fleet, not only rented cars. Fleet search ignores fuel; web history has no search/sort/pagination or printable voucher. Navigation has no URL/history state, so screens cannot be deep-linked or restored with browser Back.",
+      "reproduce": "Compare the report title to drawFleetTable's filter; inspect history controls and showScreen.",
+      "fix": "Add a clear All/Rented/Available filter, searchable history, pagination, export/print, and meaningful routes if the preview becomes an application.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1431
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1465
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1752
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2057
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2127
+        }
+      ]
+    },
+    {
+      "id": "D01",
+      "severity": "High",
+      "area": "Desktop",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "Filtered or sorted history shows the wrong customer details",
+      "impact": "Grid rows are filtered/sorted, but the detail panel uses rowIndex into the unfiltered cachedBookings list. This can show another customer's address, vehicle and extras for the selected booking.",
+      "reproduce": "Both filtered and sorted grid rows displayed WAC-BK-00002 while the detail panel displayed WAC-BK-00003.",
+      "fix": "Bind each row to its BookingId/object and resolve details from the selected row, independent of filtering and sorting.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/booking_report.cs",
+          "line": 169
+        },
+        {
+          "file": "RentOnCars/RentOnCars/booking_report.cs",
+          "line": 214
+        },
+        {
+          "file": "RentOnCars/RentOnCars/booking_report.cs",
+          "line": 224
+        },
+        {
+          "file": "RentOnCars/RentOnCars/booking_report.cs",
+          "line": 235
+        }
+      ]
+    },
+    {
+      "id": "D02",
+      "severity": "High",
+      "area": "Desktop",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe + source",
+      "title": "Reviewed price can disagree with the saved total",
+      "impact": "CalculateEstimate always uses £25, while Booking and SaveBooking use SelectedCar.DailyRate. The review shows the estimate, and the receipt combines that estimate's items with the booking's total.",
+      "reproduce": "For SUV/Hybrid, 3 days, both extras, and a £40 rate: review estimate £206; booking total £251.",
+      "fix": "Use one authoritative pricing breakdown based on the allocated database car, and use that same snapshot for review, persistence and receipt.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Services/PricingCalculator.cs",
+          "line": 83
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 119
+        },
+        {
+          "file": "RentOnCars/RentOnCars/BookingReviewDialog.cs",
+          "line": 66
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 371
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "severity": "High",
+      "area": "Desktop",
+      "kind": "Confirmed defect",
+      "verification": "Source",
+      "title": "Closing the dashboard can leave a hidden running application",
+      "impact": "The welcome form is Application.Run's main form and is hidden. The login form is also hidden when dashboard opens. Dashboard close only exits when almost no other forms exist; the two hidden forms prevent that. Logout creates new login instances rather than disposing/reusing earlier hidden ones.",
+      "reproduce": "Trace Welcome_page.Hide, LoginForm.Hide and both dashboard FormClosed conditions. Native window lifecycle interaction was not performed.",
+      "fix": "Manage form lifetime with an ApplicationContext or explicit ownership; close/dispose hidden forms and make normal dashboard exit terminate the application.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Program.cs",
+          "line": 54
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Welcome_page.cs",
+          "line": 42
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Form1.cs",
+          "line": 131
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Form1.cs",
+          "line": 142
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Dashboard.cs",
+          "line": 172
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Dashboard.cs",
+          "line": 193
+        }
+      ]
+    },
+    {
+      "id": "D04",
+      "severity": "High",
+      "area": "Desktop",
+      "kind": "Responsiveness defect",
+      "verification": "Source",
+      "title": "Database operations block the UI, including every customer keystroke",
+      "impact": "OptionChanged is attached to text fields, age, licence, days and extras. Each event recalculates and synchronously queries SQL availability. Login/dashboard/report/save/startup also perform blocking database work; offline connection waits can repeatedly freeze the UI.",
+      "reproduce": "firstnamebox.TextChanged -> OptionChanged -> UpdateLivePricingAndAvailability -> GetAvailableCar -> con.Open. Connection timeout is 30 seconds. Latency was not benchmarked.",
+      "fix": "Separate local validation/pricing from availability; query only when relevant selections change, debounce, use async I/O and cancellation, and keep startup/retry work off the UI thread.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Details.Designer.cs",
+          "line": 750
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 149
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 169
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 410
+        },
+        {
+          "file": "RentOnCars/RentOnCars/App.config",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "D05",
+      "severity": "Medium",
+      "area": "Desktop",
+      "kind": "Verification gap",
+      "verification": "Source + runtime probe",
+      "title": "Age/licence verification is pre-assumed and receipts claim payment",
+      "impact": "Desktop and web forms default to an adult age and a valid licence. Reviews describe the licence as Verified, and receipts label the calculated amount Paid, although no licence verification evidence or payment record/status is stored.",
+      "reproduce": "Desktop defaults age=25 and licence=true; web defaults age=26/licence=yes. No payment entity or settlement flow exists.",
+      "fix": "Require explicit staff confirmation for age/licence, use accurate 'confirmed by staff' wording, and label amounts as rental total/due unless payment is actually recorded.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 48
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 64
+        },
+        {
+          "file": "RentOnCars/RentOnCars/BookingReviewDialog.cs",
+          "line": 34
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Details.cs",
+          "line": 376
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1223
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 1554
+        }
+      ]
+    },
+    {
+      "id": "D06",
+      "severity": "Medium",
+      "area": "Desktop",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "Domain and service validators disagree and allow invalid car state",
+      "impact": "Booking.ValidateBooking does not check name/address limits or IsRented. BookingValidator treats any non-null car as available without checking rental state, category/fuel match, or defined enums. A negative daily rate can also reach ComputeTotal.",
+      "reproduce": "Probes accepted a rented car with a 51-character name, a mismatched rented car, and category enum 999. ComputeTotal at -£25 returned -£75.",
+      "fix": "Centralize domain validation and enforce availability, enum validity, metadata consistency and positive rates at the persistence boundary.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 370
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/BookingValidator.cs",
+          "line": 128
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/BookingValidator.cs",
+          "line": 140
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/PricingCalculator.cs",
+          "line": 146
+        }
+      ]
+    },
+    {
+      "id": "D07",
+      "severity": "Medium",
+      "area": "Desktop",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "Strict enum parsers accept undefined numeric enum values",
+      "impact": "Enum.TryParse accepts numeric strings such as 999 without Enum.IsDefined. The methods therefore return undefined categories/fuels despite claiming strict validation; later surcharge calculation can throw.",
+      "reproduce": "ParseCarType(\"999\") and ParseFuelType(\"999\") both returned enum integer 999.",
+      "fix": "Require Enum.IsDefined or an explicit whitelist after parsing; cover numeric and combined enum strings in tests.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 155
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 186
+        }
+      ]
+    },
+    {
+      "id": "D08",
+      "severity": "Low",
+      "area": "Desktop",
+      "kind": "Confirmed defect",
+      "verification": "Runtime probe",
+      "title": "RentedCarsList identifies objects instead of vehicles",
+      "impact": "Contains uses reference identity, so two objects for the same CarId are both added. Clear empties the list without marking cars available. DisplayRentedCars is an empty method.",
+      "reproduce": "Two objects with CarId=1 yielded Count=2; Clear left the original car IsRented=true.",
+      "fix": "Use stable vehicle identity, define Clear's state behavior, and implement or remove the empty display method.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 437
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 459
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 475
+        }
+      ]
+    },
+    {
+      "id": "D09",
+      "severity": "Low",
+      "area": "Desktop",
+      "kind": "Localization defect",
+      "verification": "Runtime probe",
+      "title": "GBP formatting depends on the computer's current culture",
+      "impact": "Financial strings prefix £ but use the current culture's decimal separator. The existing benchmark test assumes a period, making behavior and tests locale-dependent.",
+      "reproduce": "Under fr-FR, FormattedGrandTotal produced £206,00 instead of £206.00.",
+      "fix": "Format GBP consistently with an explicit intended culture, and keep persisted values culture-independent.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Services/PricingCalculator.cs",
+          "line": 40
+        },
+        {
+          "file": "RentOnCars/RentOnCars.Tests/Program.cs",
+          "line": 329
+        }
+      ]
+    },
+    {
+      "id": "B01",
+      "severity": "High",
+      "area": "Backend / DB",
+      "kind": "Confirmed defect",
+      "verification": "SQL integration probe",
+      "title": "SaveBooking trusts caller-supplied rate, category and fuel",
+      "impact": "The repository calculates TotalCost before locking the car. The lock SELECT retrieves authoritative metadata but only checks whether a row exists. Booking insertion still uses the caller's SelectedCar values, allowing stale or altered metadata to be recorded.",
+      "reproduce": "In an isolated SQL database, a real CityCar/Petrol at £25 was passed as SUV/Hybrid at £1. SaveBooking recorded SUV and £134 rather than the real vehicle's £111 with both extras.",
+      "fix": "Read and validate authoritative car metadata inside the transaction, calculate pricing from that row, and reject or re-review changed terms.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 339
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 360
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 370
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 402
+        }
+      ]
+    },
+    {
+      "id": "B02",
+      "severity": "High",
+      "area": "Backend / DB",
+      "kind": "Workflow gap",
+      "verification": "Source + runtime probe",
+      "title": "There is no durable rental return or booking lifecycle",
+      "impact": "The desktop repository only changes cars from available to rented. No return/cancel/complete operation exists, so normal bookings eventually exhaust the seeded fleet. Schema has no hire start/end, actual return date or booking status; web Return just flips a local boolean without closing a booking.",
+      "reproduce": "Search repository operations: no check-in method. The web return probe kept history without status or returnedAt.",
+      "fix": "Add transactional return/cancellation with actor/time, booking status and rental dates; update availability from active rentals and record returns against the specific booking.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 427
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 45
+        },
+        {
+          "file": "web_preview/index.html",
+          "line": 2087
+        }
+      ]
+    },
+    {
+      "id": "B03",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Confirmed defect",
+      "verification": "SQL integration probe",
+      "title": "Historical item prices are not preserved or faithfully retrieved",
+      "impact": "History joins the current car DailyRate. Optional extras retrieval loads only ExtraName and reconstructs prices using current constants, ignoring saved DailyPrice and NumberOfDays. Stored TotalCost survives, but the historical breakdown is not reproducible.",
+      "reproduce": "After changing the audit car rate to £99 and saved extra rates to £123, history read base=£99 and extras/day=£12 while retaining total £134.",
+      "fix": "Store a booking-time pricing snapshot and read the persisted item rates/quantities rather than current fleet rates/constants.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 219
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 251
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 287
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 79
+        }
+      ]
+    },
+    {
+      "id": "B04",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Integrity gap",
+      "verification": "SQL integration probe",
+      "title": "Database constraints permit invalid booking and extra records",
+      "impact": "Bookings allows blank strings, licence=false, unknown category/fuel and zero totals. Extras has no unique booking/name constraint or consistency rule tying days to the booking, permitting duplicates and inconsistent quantities. Repository validation covers some, but alternate writers can violate invariants.",
+      "reproduce": "Isolated direct SQL inserts accepted blank fields, invalid licence, unknown selections, zero total and a duplicate 28-day extra for a 3-day booking.",
+      "fix": "Enforce critical invariants in schema and write procedures: nonblank fields, defined enums, licence requirement, unique extras and consistent quantities.",
+      "refs": [
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 50
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 55
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 58
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "id": "B05",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Maintenance gap",
+      "verification": "Source",
+      "title": "Initialization creates missing tables but does not migrate or validate existing schema",
+      "impact": "IF OBJECT_ID IS NULL skips existing tables entirely. There is no schema version, ALTER migration or compatibility check. An old/incompatible schema can be declared initialized; failures later appear as database-offline errors.",
+      "reproduce": "Review CreateTables and Initialize: success depends on statements running, not a schema compatibility check. No actual old-schema upgrade was tested.",
+      "fix": "Add versioned migrations and schema compatibility checks; distinguish connection failure from incompatible schema.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 62
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 70
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 237
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 254
+        }
+      ]
+    },
+    {
+      "id": "B06",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Configuration defect",
+      "verification": "Source",
+      "title": "A custom database catalog is ignored during database creation",
+      "impact": "EnsureDatabaseExists switches to master but tests/creates the hardcoded RentOnCarsDB rather than the configured InitialCatalog. It also manages MSSQLLocalDB even for a custom server. This breaks an otherwise supported custom-catalog configuration and produces misleading guidance.",
+      "reproduce": "Set Initial Catalog to another database: initialization still creates RentOnCarsDB and then attempts the configured database. This path was reviewed, not executed against a user database.",
+      "fix": "Use the configured server/catalog consistently; only manage LocalDB when it is the selected provider/instance.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 28
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 57
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 211
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 224
+        },
+        {
+          "file": "RentOnCars/DATABASE_SETUP.txt",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "B07",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Reliability defect",
+      "verification": "Source",
+      "title": "The LocalDB process timeout does not bound execution",
+      "impact": "ReadToEnd is called on redirected streams before WaitForExit(15000), so a hung process can block before the timeout is reached. The wait result and exit code are ignored; timed-out children are not terminated. Sequential stream reading also risks blocking.",
+      "reproduce": "RunSqlLocalDb reads stdout and stderr synchronously before its timed wait. A hung child was not deliberately created.",
+      "fix": "Read both streams concurrently, enforce a real process deadline, inspect exit codes and handle timed-out children explicitly.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 192
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 197
+        },
+        {
+          "file": "RentOnCars/RentOnCars/DatabaseInitializer.cs",
+          "line": 199
+        }
+      ]
+    },
+    {
+      "id": "B08",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Consistency risk",
+      "verification": "Source inference",
+      "title": "History reads extras and bookings without a consistent snapshot",
+      "impact": "GetDetails first loads all extras, then all bookings using a separate statement with no read transaction. A booking committed between those reads can appear without its saved extras until the next refresh.",
+      "reproduce": "A commit after extrasSql completes but before the bookings SELECT is the problematic ordering. The timing window was not stress-tested.",
+      "fix": "Retrieve bookings and extras in one query or use an appropriate consistent read transaction/snapshot.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 218
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 245
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 264
+        }
+      ]
+    },
+    {
+      "id": "B09",
+      "severity": "Medium",
+      "area": "Backend / DB",
+      "kind": "Scalability gap",
+      "verification": "Source",
+      "title": "Reports load all records and keep stale data on refresh errors",
+      "impact": "GetDetails scans all bookings and all extras; filtering is in memory and recreates grids. The schema has no explicit supporting indexes for availability/filter/FK lookups. A refresh error displays an error label while leaving the old grid/details in place. Ten demo cars conceal the scale issue.",
+      "reproduce": "Inspect unbounded SELECTs and report readData catch. Performance at large volumes was not measured.",
+      "fix": "Add database-side filtering/pagination and suitable indexes; label retained data as stale or clear it on load failure.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 219
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 246
+        },
+        {
+          "file": "RentOnCars/RentOnCars/booking_report.cs",
+          "line": 82
+        },
+        {
+          "file": "RentOnCars/RentOnCars/booking_report.cs",
+          "line": 158
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "R01",
+      "severity": "Medium",
+      "area": "Security / Operations",
+      "kind": "Production limitation",
+      "verification": "Source",
+      "title": "The shared fixed credential is a demo gate, not production staff security",
+      "impact": "The required assignment credential is embedded in source/documentation. There are no individual accounts, roles, lockout, session expiry or persisted staff actor for bookings. Forms/repository also have no authenticated-user context. This is assignment-aligned, but inadequate for an operational multi-user service.",
+      "reproduce": "Form1 defines public credential constants; Booking and schema have no staff actor field. This is not a claim of a reachable remote endpoint.",
+      "fix": "Keep the required credential for the assignment/demo only; production needs individual identities, server-enforced permissions and actor-linked records.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Form1.cs",
+          "line": 21
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Form1.cs",
+          "line": 53
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 333
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "R02",
+      "severity": "Medium",
+      "area": "Security / Operations",
+      "kind": "Reliability gap",
+      "verification": "Source",
+      "title": "Audit logging is incomplete and can fail silently",
+      "impact": "Only login events are logged; bookings/returns lack transaction audit entries or staff attribution. LoginAuditLogger writes beside the executable, ignores all write failures, keeps an unbounded in-memory list and has no rotation/tamper protection. A read-only installation can silently lose disk audit records.",
+      "reproduce": "Inspect File.AppendAllText and empty catch, plus SaveBooking without audit calls. Disk permission failures were not injected.",
+      "fix": "Write structured actor-linked audit events to a supported writable store, surface failures, and define retention/rotation.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/Services/LoginAuditLogger.cs",
+          "line": 30
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/LoginAuditLogger.cs",
+          "line": 73
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/LoginAuditLogger.cs",
+          "line": 81
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/LoginAuditLogger.cs",
+          "line": 84
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Repos/Booking_repos.cs",
+          "line": 445
+        }
+      ]
+    },
+    {
+      "id": "R03",
+      "severity": "Medium",
+      "area": "Tests / Delivery",
+      "kind": "Coverage gap",
+      "verification": "Build + test run + source",
+      "title": "The 20 passing tests omit the workflows where serious bugs occur",
+      "impact": "Existing tests cover credentials, local validation, pricing, enums, an in-memory collection, logging and executable discovery. They never test SaveBooking/GetDetails with SQL, concurrent saves, filtered/sorted report selection, frontend injection, persistence, keyboard flows or window lifetime. No CI workflow is tracked.",
+      "reproduce": "The Debug solution built and all 20 original tests passed despite the reproduced data/security/report failures. New audit probes demonstrate the missing coverage.",
+      "fix": "Add targeted regression tests for the verified failures and isolated database integration tests; run them in CI with required environment setup.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars.Tests/Program.cs",
+          "line": 27
+        },
+        {
+          "file": "RentOnCars/RentOnCars.Tests/Program.cs",
+          "line": 47
+        },
+        {
+          "file": "RentOnCars/RentOnCars.Tests/RentOnCars.Tests.csproj",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "R04",
+      "severity": "High",
+      "area": "Tests / Delivery",
+      "kind": "Archive hazard",
+      "verification": "Source",
+      "title": "The archived SQL setup script deletes all rental data",
+      "impact": "original_source retains a setup script that drops extras, bookings and cars in RentOnCarsDB. It is not called by the active solution, but executing the wrong setup file would erase the operational tables.",
+      "reproduce": "The archived script contains DROP TABLE at lines 20, 24 and 28. It was not executed.",
+      "fix": "Clearly quarantine historical source and remove destructive setup instructions from any runnable/distributed path; add prominent warnings and safe scripts.",
+      "refs": [
+        {
+          "file": "original_source/RentOnCars/RentOnCars/dbo.database.sql",
+          "line": 19
+        },
+        {
+          "file": "original_source/RentOnCars/RentOnCars/dbo.database.sql",
+          "line": 23
+        },
+        {
+          "file": "original_source/RentOnCars/RentOnCars/dbo.database.sql",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "id": "R05",
+      "severity": "Low",
+      "area": "Tests / Delivery",
+      "kind": "Maintenance gap",
+      "verification": "Source",
+      "title": "Business rules and source artifacts are duplicated and documentation overstates coverage",
+      "impact": "Pricing is repeated in JavaScript, PricingCalculator, model methods and OptionalExtras; schema/seeds are duplicated in code and SQL. Original source and an enhanced ZIP create multiple plausible entry points. README's named test list does not match the actual runner and calls table creation 'schema migrations'. It does not explain running or limiting the web preview.",
+      "reproduce": "Compare tariffRules, ComputeTotal, Booking.CalculateTotalCost, SQL setup and README test table to Program.cs.",
+      "fix": "Centralize authoritative rules/migrations, document active entry points and preview limitations, and keep test claims generated from actual runs.",
+      "refs": [
+        {
+          "file": "web_preview/index.html",
+          "line": 1623
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Services/PricingCalculator.cs",
+          "line": 57
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 256
+        },
+        {
+          "file": "RentOnCars/RentOnCars/Models/BookingModels.cs",
+          "line": 394
+        },
+        {
+          "file": "README.md",
+          "line": 114
+        },
+        {
+          "file": "README.md",
+          "line": 147
+        }
+      ]
+    },
+    {
+      "id": "R06",
+      "severity": "Medium",
+      "area": "Security / Operations",
+      "kind": "Production limitation",
+      "verification": "Source",
+      "title": "There is no documented deployment, backup/recovery or customer-data lifecycle",
+      "impact": "Default per-user LocalDB creates separate inventories across machines/Windows users. The repo has no backup/restore procedure, packaged deployment, production environment configuration, customer-data retention/deletion policy or application-level access model for records. Windows/.NET Framework are required for the desktop.",
+      "reproduce": "Review App.config, schema and setup guide. OS/database protections may exist outside this repo; they were not assessed.",
+      "fix": "Define a shared deployment architecture if required, least-privilege database access, tested backups/restores, and explicit customer-data retention and access rules.",
+      "refs": [
+        {
+          "file": "RentOnCars/RentOnCars/App.config",
+          "line": 5
+        },
+        {
+          "file": "RentOnCars/DATABASE_SETUP.txt",
+          "line": 6
+        },
+        {
+          "file": "RentOnCars/RentOnCars/RentOnCars.csproj",
+          "line": 12
+        },
+        {
+          "file": "RentOnCars/dbo.database.sql",
+          "line": 50
+        }
+      ]
+    }
+  ]
+}

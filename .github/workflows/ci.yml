@@ -1,0 +1,19 @@
+name: Rental operations checks
+on: [push, pull_request]
+jobs:
+  regression:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Domain, SQL, HTTP and browser regression tests
+        shell: powershell
+        run: ./scripts/test.ps1 -WithUI
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-checks
+          path: test-results

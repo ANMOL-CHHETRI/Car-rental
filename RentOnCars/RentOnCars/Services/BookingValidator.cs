@@ -107,7 +107,7 @@ namespace RentOnCars.Services
             }
 
             // Age validation
-            if (age < MinAge)
+            if (age < MinAge || age > 120)
             {
                 result.AddError("Age", $"Customer must be at least {MinAge} years old to rent a vehicle (entered: {age}).");
             }
@@ -125,19 +125,19 @@ namespace RentOnCars.Services
             }
 
             // Category selection
-            if (!carType.HasValue)
+            if (!carType.HasValue || !Enum.IsDefined(typeof(CarType), carType.Value))
             {
                 result.AddError("CarType", "Please select a vehicle category.");
             }
 
             // Fuel type selection
-            if (!fuelType.HasValue)
+            if (!fuelType.HasValue || !Enum.IsDefined(typeof(FuelType), fuelType.Value))
             {
                 result.AddError("FuelType", "Please select a fuel type.");
             }
 
             // Vehicle availability
-            if (carType.HasValue && fuelType.HasValue && availableCar == null)
+            if (carType.HasValue && fuelType.HasValue && (availableCar == null || availableCar.IsRented || availableCar.CarType != carType.Value || availableCar.FuelType != fuelType.Value || availableCar.DailyRate <= 0m))
             {
                 result.AddError("VehicleAvailability", "No available vehicle matches the selected category and fuel type.");
             }

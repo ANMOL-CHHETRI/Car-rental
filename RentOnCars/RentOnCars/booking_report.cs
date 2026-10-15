@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
+using RentOnCars.Services;
 using System.Windows.Forms;
 using RentOnCars.Models;
 using RentOnCars.Repos;
@@ -20,6 +23,11 @@ namespace RentOnCars
         private readonly BookingRepository repository = new BookingRepository();
         private List<Booking> cachedBookings = new List<Booking>();
         private List<Car> cachedRentedCars = new List<Car>();
+        private int page=1, totalRecords, loadVersion;
+        private readonly Timer searchTimer=new Timer { Interval=300 };
+        private readonly Button returnButton=new Button { Text="Return vehicle", Width=140,Height=36,Left=160,Top=8 };
+        private readonly Button previousButton=new Button { Text="Previous",Width=85,Height=36,Left=330,Top=8 };
+        private readonly Button nextButton=new Button { Text="Next",Width=85,Height=36,Left=425,Top=8 };
 
         public booking_report() : this(false)
         {
@@ -30,6 +38,13 @@ namespace RentOnCars
             showRentedCarsOnly = rentedCarsOnly;
             InitializeComponent();
             ApplyCustomStyling();
+            bottomPanel.Controls.Add(returnButton);bottomPanel.Controls.Add(previousButton);bottomPanel.Controls.Add(nextButton);
+            Theme.ApplySecondaryButton(returnButton);Theme.ApplySecondaryButton(previousButton);Theme.ApplySecondaryButton(nextButton);
+            returnButton.Click+=ReturnSelectedBooking;
+            previousButton.Click+=(sender,args)=>{if(page>1){page--;readData();}};
+            nextButton.Click+=(sender,args)=>{if(page*25<totalRecords){page++;readData();}};
+            searchTimer.Tick+=(sender,args)=>{searchTimer.Stop();page=1;readData();};
+            Disposed+=(sender,args)=>searchTimer.Dispose();
         }
 
         private void booking_report_Load(object sender, EventArgs e)
@@ -64,27 +79,31 @@ namespace RentOnCars
         /// Reads records from database repository and binds them to the styled DataGridView.
         /// Handles empty states and error recovery gracefully.
         /// </summary>
-        public void readData()
+        public async void readData()
         {
+            int version=++loadVersion; string query=searchBox.Text.Trim();refreshButton.Enabled=false;
             try
             {
-                emptyStateLabel.Visible = false;
-
-                if (showRentedCarsOnly)
-                {
-                    LoadRentedCarsData();
+                if(showRentedCarsOnly) {
+                    var fleet=await Task.Run(()=>repository.GetFleet(query,"rented",page,25));
+                    if(IsDisposed||version!=loadVersion)return;
+                    cachedRentedCars=fleet.Items;totalRecords=fleet.Total;ApplyRentedCarsFilter();
+                } else {
+                    var records=await Task.Run(()=>repository.GetDetails(query,page,25));
+                    if(IsDisposed||version!=loadVersion)return;
+                    cachedBookings=records.Items;totalRecords=records.Total;ApplyBookingHistoryFilter();
                 }
-                else
-                {
-                    LoadBookingHistoryData();
-                }
+                previousButton.Enabled=page>1;nextButton.Enabled=page*25<totalRecords;
+                recordCountLabel.Text=$"Page {page} · {totalRecords} record(s)";
             }
-            catch (Exception ex)
-            {
-                emptyStateLabel.Text = "Unable to load database records:\n" + ex.Message;
-                emptyStateLabel.ForeColor = Theme.DangerRed;
-                emptyStateLabel.Visible = true;
+            catch(Exception ex) {
+                if(IsDisposed||version!=loadVersion)return;
+                cachedBookings.Clear();cachedRentedCars.Clear();dataGridView1.DataSource=null;ClearDetailPanel();
+                emptyStateLabel.Text="Records could not be loaded. Refresh to retry.";emptyStateLabel.Visible=true;
+                recordCountLabel.Text="Unavailable";returnButton.Enabled=false;
+                System.Diagnostics.Trace.TraceError(ex.ToString());
             }
+            finally {if(!IsDisposed&&version==loadVersion)refreshButton.Enabled=true;}
         }
 
         private void LoadRentedCarsData()
@@ -122,13 +141,14 @@ namespace RentOnCars
                 row["Registration Number"] = car.RegistrationNumber;
                 row["Vehicle Category"] = car.CarType.ToString();
                 row["Fuel Type"] = car.FuelType.ToString();
-                row["Base Daily Rate"] = $"£{car.DailyRate:0.00}";
+                row["Base Daily Rate"] = $"{PricingCalculator.FormatMoney(car.DailyRate)}";
                 row["Rental Status"] = "Hired / Rented";
                 dt.Rows.Add(row);
                 matchCount++;
             }
 
             dataGridView1.DataSource = dt;
+            returnButton.Enabled=matchCount>0;
             recordCountLabel.Text = $"Showing {matchCount} of {cachedRentedCars.Count} rented vehicle(s)";
 
             if (matchCount == 0)
@@ -164,6 +184,7 @@ namespace RentOnCars
             dt.Columns.Add("Fuel Type", typeof(string));
             dt.Columns.Add("Rental Days", typeof(int));
             dt.Columns.Add("Stored Total Cost", typeof(string));
+            dt.Columns.Add("Status",typeof(string));
 
             int matchCount = 0;
             foreach (Booking booking in cachedBookings)
@@ -189,7 +210,8 @@ namespace RentOnCars
                 row["Vehicle Category"] = booking.SelectedCar != null ? booking.SelectedCar.CarType.ToString() : "--";
                 row["Fuel Type"] = booking.SelectedCar != null ? booking.SelectedCar.FuelType.ToString() : "--";
                 row["Rental Days"] = booking.NumberOfDays;
-                row["Stored Total Cost"] = $"£{booking.TotalCost:0.00}";
+                row["Stored Total Cost"] = PricingCalculator.FormatMoney(booking.TotalCost);
+                row["Status"] = booking.Status;
                 dt.Rows.Add(row);
                 matchCount++;
             }
@@ -226,17 +248,21 @@ namespace RentOnCars
 
         private void DisplayBookingDetails(int rowIndex)
         {
-            if (rowIndex < 0 || rowIndex >= cachedBookings.Count)
+            if (rowIndex < 0)
             {
                 ClearDetailPanel();
                 return;
             }
 
-            Booking b = cachedBookings[rowIndex];
+            if(rowIndex>=dataGridView1.Rows.Count){ClearDetailPanel();return;}
+            string reference=Convert.ToString(dataGridView1.Rows[rowIndex].Cells["Booking ID"].Value);
+            Booking b=cachedBookings.FirstOrDefault(x=>$"WAC-BK-{x.BookingId:D5}"==reference);
+            if(b==null){ClearDetailPanel();return;}
+            returnButton.Enabled=b.Status=="Active";
             detailBookingRefLabel.Text = $"Booking Reference: WAC-BK-{b.BookingId:D5}";
             detailCustomerNameLabel.Text = $"Customer: {b.CustomerFirstName} {b.CustomerSurname} (Age: {b.CustomerAge})";
             detailAddressLabel.Text = $"Address: {b.CustomerAddress}";
-            detailLicenseLabel.Text = $"Licence: {(b.HasValidLicense ? "Valid Driving Licence Verified" : "Invalid Licence")}";
+            detailLicenseLabel.Text = $"Licence: {(b.HasValidLicense ? "Licence confirmed by staff" : "Invalid Licence")}";
             detailVehicleLabel.Text = $"Vehicle: {b.SelectedCar.RegistrationNumber} ({b.SelectedCar.CarType} - {b.SelectedCar.FuelType})";
             detailDaysLabel.Text = $"Rental Duration: {b.NumberOfDays} Days";
 
@@ -244,11 +270,13 @@ namespace RentOnCars
             string extras = b.Extras != null ? b.Extras.GetDescription() : "None";
             detailExtrasLabel.Text = $"Saved Optional Extras: {extras}";
 
-            detailStoredTotalLabel.Text = $"Stored Total: £{b.TotalCost:0.00} GBP (Recorded at booking time)";
+            if(b.IsAnonymized) { detailCustomerNameLabel.Text="Customer details removed under retention policy.";detailAddressLabel.Text="";detailLicenseLabel.Text=""; }
+            detailStoredTotalLabel.Text = $"Stored Total: {PricingCalculator.FormatMoney(b.TotalCost)} GBP (Recorded at booking time)";
         }
 
         private void ClearDetailPanel()
         {
+            returnButton.Enabled=false;
             detailBookingRefLabel.Text = "Select a booking above to view complete details.";
             detailCustomerNameLabel.Text = string.Empty;
             detailAddressLabel.Text = string.Empty;
@@ -261,15 +289,35 @@ namespace RentOnCars
 
         private void searchBox_TextChanged(object sender, EventArgs e)
         {
-            if (showRentedCarsOnly)
-                ApplyRentedCarsFilter();
-            else
-                ApplyBookingHistoryFilter();
+            StaffSession.Touch(); searchTimer.Stop();searchTimer.Start();
         }
 
         private void refreshButton_Click(object sender, EventArgs e)
         {
             readData();
+        }
+
+        private async void ReturnSelectedBooking(object sender,EventArgs e)
+        {
+            if(dataGridView1.CurrentRow==null)return;
+            string actor;
+            try { actor=StaffSession.RequireUsername(); }
+            catch(Exception ex){MessageBox.Show(ex.Message,"Session expired");return;}
+            int id;
+            if(showRentedCarsOnly) {
+                int carId=Convert.ToInt32(dataGridView1.CurrentRow.Cells["Car ID"].Value);
+                id=await Task.Run(()=>repository.GetActiveBookingId(carId));
+            } else {
+                string reference=Convert.ToString(dataGridView1.CurrentRow.Cells["Booking ID"].Value);
+                var selected=cachedBookings.FirstOrDefault(b=>$"WAC-BK-{b.BookingId:D5}"==reference);
+                id=selected?.BookingId??0;
+            }
+            if(id==0)return;
+            if(MessageBox.Show($"Confirm the vehicle for WAC-BK-{id:D5} has been returned?","Return vehicle",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;
+            returnButton.Enabled=false;
+            try {await Task.Run(()=>repository.ReturnBooking(id,actor));if(!IsDisposed)readData();}
+            catch(Exception ex){if(!IsDisposed)MessageBox.Show(ex.Message,"Return could not be saved");}
+            finally{if(!IsDisposed)returnButton.Enabled=true;}
         }
 
         private void backButton_Click(object sender, EventArgs e)

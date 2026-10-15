@@ -94,7 +94,7 @@ namespace RentOnCars
             this.hintLabel.Name = "hintLabel";
             this.hintLabel.Size = new System.Drawing.Size(262, 13);
             this.hintLabel.TabIndex = 6;
-            this.hintLabel.Text = "Preset credentials: sta001  /  givemethekeys123";
+            this.hintLabel.Text = "Use your assigned staff account.";
             // 
             // showPasswordCheckBox
             // 
